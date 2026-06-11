@@ -1,0 +1,283 @@
+---
+// This component runs client-side only (client:load)
+---
+
+<div id="fd-demo-root">
+  <div class="controls">
+    <label class="control-group">
+      <span class="control-label">测试函数</span>
+      <select id="fd-func-select">
+        <option value="sin">f(x) = sin(x)</option>
+        <option value="exp">f(x) = eˣ</option>
+        <option value="cubic">f(x) = x³</option>
+      </select>
+    </label>
+    <label class="control-group">
+      <span class="control-label">求值点 x₀ =</span>
+      <input id="fd-x0" type="number" value="1.0" step="0.1" />
+    </label>
+    <div class="control-group">
+      <span class="control-label">差分格式</span>
+      <div class="format-btns">
+        <button class="format-btn" data-format="forward">向前</button>
+        <button class="format-btn active" data-format="central">中心</button>
+        <button class="format-btn" data-format="backward">向后</button>
+      </div>
+    </div>
+  </div>
+  <div id="fd-plot" class="plot-container"></div>
+  <p class="plot-note">横轴: log₁₀(h) · 纵轴: log₁₀(error) · 斜率 = 收敛阶 p</p>
+</div>
+
+<script>
+  declare global {
+    interface Window {
+      Plotly: any;
+    }
+  }
+
+  type NumericFn = (x: number) => number;
+  type DiffFn = (f: NumericFn, x: number, h: number) => number;
+
+  interface FuncDef {
+    f: NumericFn;
+    df: NumericFn;
+    name: string;
+  }
+
+  interface DiffMethod {
+    fn: DiffFn;
+    label: string;
+  }
+
+  function initFiniteDifferenceDemo() {
+    const funcSelect = document.getElementById("fd-func-select") as HTMLSelectElement;
+    const x0Input = document.getElementById("fd-x0") as HTMLInputElement;
+    const formatBtns = document.querySelectorAll<HTMLButtonElement>("#fd-demo-root .format-btn");
+    const plotDiv = document.getElementById("fd-plot")!;
+
+    let currentFormat = "central";
+
+    // Define test functions and their exact derivatives
+    const functions: Record<string, FuncDef> = {
+      sin: {
+        f: (x: number) => Math.sin(x),
+        df: (x: number) => Math.cos(x),
+        name: "sin(x)",
+      },
+      exp: {
+        f: (x: number) => Math.exp(x),
+        df: (x: number) => Math.exp(x),
+        name: "eˣ",
+      },
+      cubic: {
+        f: (x: number) => x * x * x,
+        df: (x: number) => 3 * x * x,
+        name: "x³",
+      },
+    };
+
+    // Finite difference formulas
+    function forwardDiff(f: NumericFn, x: number, h: number) {
+      return (f(x + h) - f(x)) / h;
+    }
+    function backwardDiff(f: NumericFn, x: number, h: number) {
+      return (f(x) - f(x - h)) / h;
+    }
+    function centralDiff(f: NumericFn, x: number, h: number) {
+      return (f(x + h) - f(x - h)) / (2 * h);
+    }
+
+    const diffMethods: Record<string, DiffMethod> = {
+      forward: { fn: forwardDiff, label: "向前差分 Forward" },
+      backward: { fn: backwardDiff, label: "向后差分 Backward" },
+      central: { fn: centralDiff, label: "中心差分 Central" },
+    };
+
+    function computeErrors(funcKey: string, x0: number, format: string) {
+      const { f, df } = functions[funcKey];
+      const exact = df(x0);
+      const diffFn = diffMethods[format].fn;
+
+      // h from 10^0 down to 10^-14
+      const hs: number[] = [];
+      const errors: number[] = [];
+      for (let exp = 0; exp >= -14; exp -= 0.2) {
+        const h = Math.pow(10, exp);
+        const approx = diffFn(f, x0, h);
+        const error = Math.abs(approx - exact);
+        hs.push(h);
+        errors.push(error);
+      }
+      return { hs, errors };
+    }
+
+    function updatePlot() {
+      const funcKey = funcSelect.value;
+      const x0 = parseFloat(x0Input.value) || 1.0;
+      const { hs, errors } = computeErrors(funcKey, x0, currentFormat);
+      const { label } = diffMethods[currentFormat];
+
+      const logH = hs.map((h: number) => Math.log10(h));
+      const logErr = errors.map((e: number) => Math.max(e, 1e-16)).map((e: number) => Math.log10(e));
+
+      // Reference lines for O(h) and O(h²)
+      const slope1X = [0, -4];
+      const slope1Y = [-1, -5];    // slope = 1
+      const slope2X = [0, -4];
+      const slope2Y = [-1, -9];    // slope = 2
+
+      const traceMain = {
+        x: logH,
+        y: logErr,
+        type: "scatter",
+        mode: "lines+markers",
+        name: label,
+        line: { color: "#2563eb", width: 2 },
+        marker: { size: 3 },
+      };
+
+      const traceO1 = {
+        x: slope1X,
+        y: slope1Y,
+        type: "scatter",
+        mode: "lines",
+        name: "斜率 1 O(h)",
+        line: { color: "#e94560", width: 1.5, dash: "dash" },
+      };
+
+      const traceO2 = {
+        x: slope2X,
+        y: slope2Y,
+        type: "scatter",
+        mode: "lines",
+        name: "斜率 2 O(h²)",
+        line: { color: "#22c55e", width: 1.5, dash: "dash" },
+      };
+
+      const layout = {
+        xaxis: {
+          title: "log₁₀(h)",
+          zeroline: false,
+          gridcolor: "#f0f0f0",
+        },
+        yaxis: {
+          title: "log₁₀(error)",
+          zeroline: false,
+          gridcolor: "#f0f0f0",
+        },
+        margin: { l: 50, r: 30, t: 20, b: 50 },
+        legend: {
+          x: 0.02,
+          y: 0.02,
+          xanchor: "left",
+          yanchor: "bottom",
+          bgcolor: "rgba(255,255,255,0.9)",
+          bordercolor: "#e0e0e0",
+          font: { size: 11 },
+        },
+        height: 380,
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+      };
+
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToRemove: ["lasso2d", "select2d"],
+        displaylogo: false,
+      };
+
+      window.Plotly.newPlot(plotDiv, [traceMain, traceO1, traceO2], layout, config);
+    }
+
+    // Event listeners
+    funcSelect.addEventListener("change", updatePlot);
+    x0Input.addEventListener("change", updatePlot);
+
+    formatBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        formatBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFormat = btn.dataset.format!;
+        updatePlot();
+      });
+    });
+
+    // Load Plotly from CDN then render
+    if (window.Plotly) {
+      updatePlot();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://cdn.plot.ly/plotly-2.32.0.min.js";
+      script.onload = updatePlot;
+      document.head.appendChild(script);
+    }
+  }
+
+  // Run when component mounts
+  initFiniteDifferenceDemo();
+</script>
+
+<style>
+  #fd-demo-root {
+    font-size: 0.85rem;
+  }
+  .controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .control-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+  .control-group select,
+  .control-group input {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    background: #fff;
+  }
+  .format-btns {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .format-btn {
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    color: var(--text-muted);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .format-btn:hover {
+    border-color: #999;
+  }
+  .format-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .plot-container {
+    width: 100%;
+  }
+  .plot-note {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+    text-align: center;
+  }
+</style>
