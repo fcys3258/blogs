@@ -1,0 +1,52 @@
+---
+export interface Props {
+  title?: string;
+}
+
+const { title = "📐 数值笔记" } = Astro.props;
+---
+
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="brand">{title}</a>
+    <nav class="nav">
+      <a href="/">文章</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    border-bottom: 1px solid var(--border-light);
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.5rem;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #111;
+    text-decoration: none;
+  }
+  .brand:hover { text-decoration: none; }
+  .nav {
+    display: flex;
+    gap: 1.25rem;
+  }
+  .nav a {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .nav a:hover { color: var(--text); }
+</style>

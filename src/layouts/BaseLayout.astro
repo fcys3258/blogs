@@ -1,0 +1,50 @@
+---
+import Header from "../components/Header.astro";
+import "../styles/global.css";
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const pageTitle = title ? `${title} · 数值笔记` : "数值笔记";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>&copy; {new Date().getFullYear()} 数值笔记</span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .footer {
+    margin-top: 4rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-light);
+  }
+  .footer-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-light);
+  }
+</style>
