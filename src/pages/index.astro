@@ -1,0 +1,90 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ArticleCard from "../components/ArticleCard.astro";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("posts");
+const posts = allPosts
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+// Collect all unique tags
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
+---
+
+<BaseLayout description="计算数学学习笔记">
+  <div class="container">
+    <section class="hero">
+      <h1 class="hero-title">数值笔记</h1>
+      <p class="hero-sub">计算数学学习笔记 · 理论推导 + 交互式数值实验</p>
+    </section>
+
+    {allTags.length > 0 && (
+      <nav class="tag-filter">
+        <a href="/" class="tag-filter-item active">全部</a>
+        {allTags.map((tag) => (
+          <a href={`/tags/${tag}`} class="tag-filter-item">{tag}</a>
+        ))}
+      </nav>
+    )}
+
+    <section class="post-list">
+      {posts.length === 0 ? (
+        <p class="empty">还没有文章，开始写第一篇吧 ✍️</p>
+      ) : (
+        posts.map((post) => (
+          <ArticleCard
+            title={post.data.title}
+            date={post.data.date}
+            slug={post.slug}
+            tags={post.data.tags}
+            description={post.data.description}
+          />
+        ))
+      )}
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding: 3rem 0 1.5rem;
+  }
+  .hero-title {
+    font-size: 2rem;
+    margin-bottom: 0.35rem;
+  }
+  .hero-sub {
+    color: var(--text-light);
+    font-size: 0.95rem;
+  }
+  .tag-filter {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 0.5rem;
+  }
+  .tag-filter-item {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.2rem 0.65rem;
+    border-radius: 4px;
+    background: var(--accent-bg);
+  }
+  .tag-filter-item:hover,
+  .tag-filter-item.active {
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+  }
+  .post-list {
+    padding: 0.5rem 0 2rem;
+  }
+  .empty {
+    padding: 3rem 0;
+    color: var(--text-light);
+    text-align: center;
+  }
+</style>

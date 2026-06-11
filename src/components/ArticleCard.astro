@@ -1,0 +1,68 @@
+---
+import TagBadge from "./TagBadge.astro";
+
+export interface Props {
+  title: string;
+  date: Date;
+  slug: string;
+  tags: string[];
+  description?: string;
+}
+
+const { title, date, slug, tags, description } = Astro.props;
+const formattedDate = date.toISOString().slice(0, 10);
+---
+
+<article class="card">
+  <a href={`/posts/${slug}`} class="card-link">
+    <h2 class="card-title">{title}</h2>
+  </a>
+  <div class="card-meta">
+    <time datetime={formattedDate}>{formattedDate}</time>
+    {tags.length > 0 && (
+      <span class="card-tags">
+        {tags.map((tag) => <TagBadge tag={tag} />)}
+      </span>
+    )}
+  </div>
+  {description && <p class="card-desc">{description}</p>}
+</article>
+
+<style>
+  .card {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .card:first-child {
+    padding-top: 0;
+  }
+  .card-link { text-decoration: none; }
+  .card-link:hover { text-decoration: none; }
+  .card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 0.35rem;
+    transition: color 0.15s;
+  }
+  .card-link:hover .card-title { color: #2563eb; }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+  }
+  .card-tags {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+  .card-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    margin-bottom: 0;
+  }
+</style>

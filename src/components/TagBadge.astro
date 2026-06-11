@@ -1,0 +1,23 @@
+---
+const { tag } = Astro.props;
+---
+
+<a href={`/tags/${tag}`} class="tag-badge">{tag}</a>
+
+<style>
+  .tag-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: var(--accent-bg);
+    padding: 0.15em 0.55em;
+    border-radius: 4px;
+    text-decoration: none;
+    line-height: 1.5;
+  }
+  .tag-badge:hover {
+    background: #e0e0e0;
+    color: var(--text);
+    text-decoration: none;
+  }
+</style>
