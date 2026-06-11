@@ -1,0 +1,70 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ArticleCard from "../../components/ArticleCard.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  const allTags = [...new Set(posts.flatMap((p) => p.data.tags))];
+  return allTags.map((tag) => ({
+    params: { tag },
+    props: { tag },
+  }));
+}
+
+const { tag } = Astro.props;
+const allPosts = await getCollection("posts");
+const posts = allPosts
+  .filter((p) => p.data.tags.includes(tag))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title={`#${tag}`}>
+  <div class="container">
+    <section class="tag-header">
+      <h1>#{tag}</h1>
+      <p>{posts.length} 篇文章</p>
+    </section>
+
+    <section class="post-list">
+      {posts.map((post) => (
+        <ArticleCard
+          title={post.data.title}
+          date={post.data.date}
+          slug={post.slug}
+          tags={post.data.tags}
+          description={post.data.description}
+        />
+      ))}
+    </section>
+
+    <nav class="back-nav">
+      <a href="/">&larr; 返回首页</a>
+    </nav>
+  </div>
+</BaseLayout>
+
+<style>
+  .tag-header {
+    padding: 2.5rem 0 1rem;
+  }
+  .tag-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  .tag-header p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+  .post-list {
+    padding: 0.5rem 0 1rem;
+  }
+  .back-nav {
+    padding: 1.5rem 0 3rem;
+    border-top: 1px solid var(--border-light);
+  }
+  .back-nav a {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+</style>
