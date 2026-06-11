@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数值笔记 · 博客设计方案</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #fafafa;
+    color: #1a1a1a;
+    line-height: 1.6;
+  }
+  .container { max-width: 820px; margin: 0 auto; padding: 40px 24px; }
+  h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { color: #999; font-size: 14px; margin-bottom: 32px; }
+  .section { margin-bottom: 40px; }
+  .section h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; color: #333; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .card h3 { font-size: 14px; margin-bottom: 6px; }
+  .card p { font-size: 12px; color: #666; line-height: 1.5; }
+
+  .file-tree {
+    background: #1e1e2e;
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #c9d1d9;
+  }
+  .file-tree .dir { color: #79c0ff; }
+  .file-tree .file { color: #d2a8ff; }
+  .file-tree .comment { color: #8b949e; }
+
+  .mockup {
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .mockup-header {
+    background: #f9fafb;
+    padding: 12px 20px;
+    font-size: 12px;
+    color: #888;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  .mockup-body { padding: 0; }
+
+  .top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .top-nav .brand { font-weight: 700; font-size: 15px; }
+  .top-nav .links { display: flex; gap: 18px; font-size: 12px; color: #666; }
+
+  .article { max-width: 680px; margin: 0 auto; padding: 40px 24px; }
+  .article h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; color: #111; }
+  .article .meta { color: #999; font-size: 12px; margin-bottom: 28px; }
+  .article p { font-size: 14px; line-height: 1.85; color: #333; margin-bottom: 14px; }
+  .article .math-block { text-align: center; margin: 16px 0; font-size: 14px; }
+
+  .def-box {
+    background: #f7f8fa;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 18px 0;
+  }
+  .def-box .label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .def-box .content { font-size: 13px; line-height: 2; }
+
+  .divider { border-top: 1px solid #eee; margin: 32px 0; }
+
+  .demo-zone {
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .demo-zone .demo-header {
+    background: #f9fafb;
+    padding: 14px 20px;
+    border-bottom: 1px solid #e8e8e8;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .demo-zone .demo-body { padding: 20px; }
+  .demo-body .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .demo-body .controls select {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .btn { border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; cursor: pointer; }
+  .btn-inactive { background: #eee; color: #333; }
+  .btn-active { background: #333; color: white; }
+
+  .chart-placeholder {
+    height: 240px;
+    background: linear-gradient(135deg, #f5f7ff, #edf0ff);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .chart-placeholder .icon { font-size: 36px; margin-bottom: 8px; }
+  .chart-placeholder .desc { color: #888; font-size: 12px; }
+  .chart-placeholder .detail { color: #bbb; font-size: 10px; margin-top: 4px; }
+
+  .workflow { display: flex; gap: 16px; }
+  .workflow .step {
+    flex: 1;
+    background: #f7f8fa;
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+  }
+  .workflow .step .num { font-size: 28px; margin-bottom: 8px; }
+  .workflow .step h4 { margin-bottom: 4px; font-size: 14px; }
+  .workflow .step p { font-size: 12px; color: #666; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h2>设计方案总览</h2>
+<p class="subtitle">技术栈 · 页面结构 · 工作流</p>
+
+<div class="section">
+  <h3>🛠️ 技术选型</h3>
+  <div class="cards">
+    <div class="card">
+      <h3>Astro</h3>
+      <p>静态站点框架，MD 原生支持，Island 架构按需加载 JS</p>
+    </div>
+    <div class="card">
+      <h3>KaTeX</h3>
+      <p>数学公式服务端渲染，零闪烁，极快</p>
+    </div>
+    <div class="card">
+      <h3>Plotly.js</h3>
+      <p>接近 MATLAB 画质的交互式科学图表</p>
+    </div>
+    <div class="card">
+      <h3>GitHub Pages</h3>
+      <p>推送即部署，零运维，免费 HTTPS</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>📁 项目结构</h3>
+  <div class="file-tree">
+    <span class="dir">blogs/</span><br>
+    ├── <span class="dir">src/</span><br>
+    │&nbsp;&nbsp; ├── <span class="dir">pages/</span>          <span class="comment">← 路由页面</span><br>
+    │&nbsp;&nbsp; ├── <span class="dir">components/</span>    <span class="comment">← 交互组件模板</span><br>
+    │&nbsp;&nbsp; └── <span class="dir">layouts/</span>       <span class="comment">← 页面布局</span><br>
+    ├── <span class="dir">content/posts/</span>     <span class="comment">← 📝 你的 Markdown 放这里</span><br>
+    │&nbsp;&nbsp; ├── function-approx/<br>
+    │&nbsp;&nbsp; │&nbsp;&nbsp; ├── <span class="file">index.md</span>     <span class="comment">← 正文（纯 Markdown + LaTeX）</span><br>
+    │&nbsp;&nbsp; │&nbsp;&nbsp; └── <span class="file">demo.js</span>     <span class="comment">← 交互代码</span><br>
+    │&nbsp;&nbsp; └── finite-diff/<br>
+    │&nbsp;&nbsp;     ├── <span class="file">index.md</span><br>
+    │&nbsp;&nbsp;     └── <span class="file">demo.js</span><br>
+    └── <span class="file">astro.config.mjs</span>
+  </div>
+</div>
+
+<div class="section">
+  <h3>📄 文章页布局（B 风格 + 文末交互区）</h3>
+  <div class="mockup">
+    <div class="mockup-header">实际页面效果预览</div>
+    <div class="mockup-body">
+
+      <div class="top-nav">
+        <span class="brand">📐 数值笔记</span>
+        <div class="links">
+          <span>文章</span><span>标签</span><span>关于</span><span>🌙</span>
+        </div>
+      </div>
+
+      <div class="article">
+        <h1>有限差分格式的精度分析</h1>
+        <div class="meta">2024-03-20 · 数值分析 · #有限差分</div>
+
+        <p>对一阶导数 \(f'(x)\)，考虑三种基本的差分近似格式。我们从 Taylor 展开出发，分析各自的截断误差。</p>
+
+        <div class="def-box">
+          <div class="label">定义</div>
+          <div class="content">
+            <strong>向前差分：</strong> \(D_+ f = \frac{f(x+h)-f(x)}{h}\)<br>
+            <strong>向后差分：</strong> \(D_- f = \frac{f(x)-f(x-h)}{h}\)<br>
+            <strong>中心差分：</strong> \(D_0 f = \frac{f(x+h)-f(x-h)}{2h}\)
+          </div>
+        </div>
+
+        <p>Taylor 级数展开直接给出误差估计。以向前差分为例：</p>
+
+        <div class="math-block">$$f(x+h)=f(x)+hf'(x)+\frac{h^2}{2}f''(\xi)$$</div>
+
+        <p>代入即得 \(\frac{f(x+h)-f(x)}{h}-f'(x)=\frac{h}{2}f''(\xi)=O(h)\)，表明向前差分具有<strong>一阶精度</strong>。中心差分格式通过对称消去 \(h\) 的奇次项，达到 <strong>二阶精度</strong> \(O(h^2)\)，这一差异在 \(h\to 0\) 时尤为明显。</p>
+
+        <div class="divider"></div>
+
+        <div class="demo-zone">
+          <div class="demo-header">🧪 实验区 — 验证收敛阶</div>
+          <div class="demo-body">
+            <div class="controls">
+              <span style="font-size:12px;color:#666">测试函数</span>
+              <select><option>sin(x)</option><option>exp(x)</option><option>x³</option></select>
+              <span style="font-size:12px;color:#666;margin-left:8px">差分格式</span>
+              <button class="btn btn-inactive">向前</button>
+              <button class="btn btn-active">中心</button>
+              <button class="btn btn-inactive">向后</button>
+            </div>
+            <div class="chart-placeholder">
+              <div>
+                <div class="icon">📈</div>
+                <div class="desc">Plotly.js 渲染的误差收敛图</div>
+                <div class="detail">横轴 log(h) · 纵轴 log(error)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>✍️ 你的工作流</h3>
+  <div class="workflow">
+    <div class="step">
+      <div class="num">1</div>
+      <h4>写 Markdown</h4>
+      <p>在 content/posts/ 下新建文件夹，用 Markdown + LaTeX 写正文</p>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <h4>提供计算代码</h4>
+      <p>给 AI 你的 MATLAB 代码 → 翻译成 JS + Plotly 的 demo.js</p>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <h4>推送部署</h4>
+      <p>git push → 自动构建 → 博客上线</p>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
