@@ -21,9 +21,12 @@ export const SITE_CONFIG = {
 
   // 搜索配置
   search: {
-    // 搜索索引文件路径
     indexPath: "/search-index.json",
-    // 搜索结果最大显示数
-    maxResults: 8,
+  },
+
+  // 分页配置
+  pagination: {
+    // 每页显示文章数
+    pageSize: 15,
   },
 } as const;

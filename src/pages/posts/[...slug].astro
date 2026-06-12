@@ -17,6 +17,15 @@ type Props = {
 
 const { post } = Astro.props;
 const { Content, headings } = await post.render();
+
+// Strip LaTeX math delimiters from heading text for clean ToC display
+function cleanHeadingText(text: string): string {
+  return text
+    .replace(/\$\$.*?\$\$/g, '')
+    .replace(/\$.*?\$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 const { title, date, tags, demo } = post.data;
 const formattedDate = date.toISOString().slice(0, 10);
 
@@ -58,7 +67,7 @@ if (demo) {
                   class={`toc-h${h.depth}`}
                   data-toc-link
                 >
-                  {h.text}
+                  {cleanHeadingText(h.text)}
                 </a>
               </li>
             ))}

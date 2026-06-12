@@ -14,9 +14,12 @@ const formattedDate = date.toISOString().slice(0, 10);
 ---
 
 <article class="card">
-  <a href={`/posts/${slug}`} class="card-link">
-    <h2 class="card-title">{title}</h2>
-  </a>
+  <!-- Invisible overlay link — covers entire card -->
+  <a href={`/posts/${slug}/`} class="card-overlay" aria-label={title}></a>
+
+  <h2 class="card-title">
+    <a href={`/posts/${slug}/`} class="card-title-link">{title}</a>
+  </h2>
   <div class="card-meta">
     <time datetime={formattedDate}>{formattedDate}</time>
     {tags.length > 0 && (
@@ -32,20 +35,41 @@ const formattedDate = date.toISOString().slice(0, 10);
   .card {
     padding: 1.25rem 0;
     border-bottom: 1px solid var(--border-light);
+    position: relative;
   }
   .card:first-child {
     padding-top: 0;
   }
-  .card-link { text-decoration: none; }
-  .card-link:hover { text-decoration: none; }
+  /* Invisible full-card clickable overlay */
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    text-decoration: none;
+  }
+  .card-overlay:hover { text-decoration: none; }
+
   .card-title {
+    margin-bottom: 0.35rem;
+    position: relative;
+    z-index: 1;
+  }
+  .card-title-link {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #111;
-    margin-bottom: 0.35rem;
+    color: var(--text-heading);
+    text-decoration: none;
     transition: color 0.15s;
+    pointer-events: auto;
   }
-  .card-link:hover .card-title { color: #2563eb; }
+  .card-title-link:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .card-overlay:hover ~ .card-title .card-title-link {
+    color: var(--accent);
+  }
+
   .card-meta {
     display: flex;
     align-items: center;
@@ -53,16 +77,26 @@ const formattedDate = date.toISOString().slice(0, 10);
     font-size: 0.8rem;
     color: var(--text-light);
     margin-bottom: 0.25rem;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .card-meta time {
+    pointer-events: none;
   }
   .card-tags {
     display: flex;
     gap: 0.35rem;
     flex-wrap: wrap;
+    pointer-events: auto;
   }
   .card-desc {
     font-size: 0.85rem;
     color: var(--text-muted);
     margin-top: 0.4rem;
     margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
   }
 </style>

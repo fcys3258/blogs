@@ -2,6 +2,9 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ArticleCard from "../../components/ArticleCard.astro";
 import { getCollection } from "astro:content";
+import { SITE_CONFIG } from "../../site.config.ts";
+
+const PAGE_SIZE = SITE_CONFIG.pagination.pageSize;
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -26,17 +29,30 @@ const posts = allPosts
       <p>{posts.length} 篇文章</p>
     </section>
 
-    <section class="post-list">
+    <div class="controls-bar">
+      <span></span>
+      <button class="sort-btn" id="sort-btn" title="切换排序">
+        <span>🕐</span>
+        <span id="sort-label">最新在前</span>
+      </button>
+    </div>
+
+    <section class="post-list" id="post-list">
       {posts.map((post) => (
-        <ArticleCard
-          title={post.data.title}
-          date={post.data.date}
-          slug={post.slug}
-          tags={post.data.tags}
-          description={post.data.description}
-        />
+        <div class="post-item" data-date={post.data.date.toISOString()}>
+          <ArticleCard
+            title={post.data.title}
+            date={post.data.date}
+            slug={post.slug}
+            tags={post.data.tags}
+            description={post.data.description}
+          />
+        </div>
       ))}
     </section>
+
+    <div class="pagination" id="pagination"></div>
+    <div id="page-data" data-page-size={PAGE_SIZE} hidden></div>
 
     <nav class="back-nav">
       <a href="/">&larr; 返回首页</a>
@@ -56,8 +72,76 @@ const posts = allPosts
     color: var(--text-light);
     font-size: 0.9rem;
   }
+  .controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 0.5rem;
+  }
+  .sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .sort-btn:hover {
+    background: var(--bg-hover);
+  }
   .post-list {
     padding: 0.5rem 0 1rem;
+  }
+  .post-item {
+    display: block;
+  }
+  .post-item.hidden {
+    display: none;
+  }
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 1rem 0 2rem;
+    font-size: 0.85rem;
+  }
+  .pagination .page-btn {
+    min-width: 2rem;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-family: inherit;
+  }
+  .pagination .page-btn:hover {
+    background: var(--bg-hover);
+  }
+  .pagination .page-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .pagination .page-btn.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .pagination .page-ellipsis {
+    padding: 0 0.2rem;
+    color: var(--text-light);
   }
   .back-nav {
     padding: 1.5rem 0 3rem;
@@ -68,3 +152,117 @@ const posts = allPosts
     color: var(--text-muted);
   }
 </style>
+
+<script>
+  const PAGE_SIZE = parseInt(document.getElementById("page-data")!.dataset.pageSize || "15");
+  const postItems = Array.from(document.querySelectorAll(".post-item")) as HTMLElement[];
+  const totalPages = Math.ceil(postItems.length / PAGE_SIZE);
+
+  function getParams() {
+    const p = new URLSearchParams(window.location.search);
+    const page = Math.max(1, parseInt(p.get("page") || "1") || 1);
+    const sort = p.get("sort") === "asc" ? "asc" : "desc";
+    return { page, sort };
+  }
+
+  function updateParams(page: number, sort: string) {
+    const p = new URLSearchParams();
+    if (page > 1) p.set("page", String(page));
+    if (sort === "asc") p.set("sort", "asc");
+    const qs = p.toString();
+    const base = window.location.pathname;
+    const url = qs ? `${base}?${qs}` : base;
+    window.history.replaceState(null, "", url);
+  }
+
+  function applySort(sort: string) {
+    const items = [...postItems];
+    items.sort((a, b) => {
+      const da = a.dataset.date || "";
+      const db = b.dataset.date || "";
+      return sort === "asc" ? da.localeCompare(db) : db.localeCompare(da);
+    });
+    const list = document.getElementById("post-list")!;
+    items.forEach((item) => list.appendChild(item));
+  }
+
+  function showPage(page: number) {
+    const start = (page - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    postItems.forEach((item, i) => {
+      item.classList.toggle("hidden", i < start || i >= end);
+    });
+  }
+
+  function renderPagination(page: number, sort: string) {
+    const container = document.getElementById("pagination")!;
+    if (totalPages <= 1) {
+      container.innerHTML = "";
+      return;
+    }
+
+    let html = "";
+    const base = window.location.pathname;
+    html += `<a href="${base}?page=${Math.max(1, page - 1)}&sort=${sort}" class="page-btn ${page <= 1 ? "disabled" : ""}" data-page="${page - 1}">←</a>`;
+
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push("...");
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+        pages.push(i);
+      }
+      if (page < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+
+    for (const p of pages) {
+      if (p === "...") {
+        html += '<span class="page-ellipsis">…</span>';
+      } else {
+        html += `<a href="${base}?page=${p}&sort=${sort}" class="page-btn ${p === page ? "active" : ""}" data-page="${p}">${p}</a>`;
+      }
+    }
+
+    html += `<a href="${base}?page=${Math.min(totalPages, page + 1)}&sort=${sort}" class="page-btn ${page >= totalPages ? "disabled" : ""}" data-page="${page + 1}">→</a>`;
+    container.innerHTML = html;
+
+    container.querySelectorAll(".page-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const newPage = parseInt((btn as HTMLElement).dataset.page || "1");
+        if (newPage >= 1 && newPage <= totalPages) {
+          updateParams(newPage, sort);
+          showPage(newPage);
+          renderPagination(newPage, sort);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      });
+    });
+  }
+
+  function updateSortUI(sort: string) {
+    const label = document.getElementById("sort-label");
+    if (label) label.textContent = sort === "asc" ? "最早在前" : "最新在前";
+  }
+
+  // Init
+  const { page, sort } = getParams();
+  applySort(sort);
+  showPage(page);
+  renderPagination(page, sort);
+  updateSortUI(sort);
+
+  // Sort button
+  document.getElementById("sort-btn")!.addEventListener("click", () => {
+    const { sort } = getParams();
+    const newSort = sort === "desc" ? "asc" : "desc";
+    updateParams(1, newSort);
+    applySort(newSort);
+    showPage(1);
+    renderPagination(1, newSort);
+    updateSortUI(newSort);
+  });
+</script>
