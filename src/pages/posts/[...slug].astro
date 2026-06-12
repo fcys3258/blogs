@@ -16,9 +16,16 @@ type Props = {
 };
 
 const { post } = Astro.props;
-const { Content } = await post.render();
+const { Content, headings } = await post.render();
 const { title, date, tags, demo } = post.data;
 const formattedDate = date.toISOString().slice(0, 10);
+
+// All posts sorted by date for prev/next navigation
+const allPosts = (await getCollection("posts"))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const currentIdx = allPosts.findIndex((p) => p.slug === post.slug);
+const prevPost = currentIdx < allPosts.length - 1 ? allPosts[currentIdx + 1] : null;
+const nextPost = currentIdx > 0 ? allPosts[currentIdx - 1] : null;
 
 // Dynamically load demo component if specified in frontmatter
 let DemoComponent: any = null;
@@ -37,37 +44,82 @@ if (demo) {
 ---
 
 <BaseLayout title={title} description={post.data.description}>
-  <div class="container">
-    <article class="article">
-      <header class="article-header">
-        <h1 class="article-title">{title}</h1>
-        <div class="article-meta">
-          <time datetime={formattedDate}>{formattedDate}</time>
-          {tags.length > 0 && (
-            <span class="article-tags">
-              {tags.map((tag) => <TagBadge tag={tag} />)}
-            </span>
-          )}
-        </div>
-      </header>
-
-      <div class="article-body">
-        <Content />
-      </div>
-    </article>
-
-    {DemoComponent && (
-      <div class="demo-section">
-        <h2 class="demo-heading">🧪 实验区</h2>
-        <div class="demo-body">
-          <DemoComponent />
-        </div>
-      </div>
+  <div class="article-layout">
+    <!-- ToC Sidebar -->
+    {headings.length > 0 && (
+      <aside class="toc-sidebar" id="toc-sidebar">
+        <div class="toc-heading">目录</div>
+        <nav>
+          <ul>
+            {headings.map((h) => (
+              <li>
+                <a
+                  href={`#${h.slug}`}
+                  class={`toc-h${h.depth}`}
+                  data-toc-link
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
     )}
 
-    <nav class="back-nav">
-      <a href="/">&larr; 返回文章列表</a>
-    </nav>
+    <!-- Main content -->
+    <div class="article-main">
+      <article class="article">
+        <header class="article-header">
+          <h1 class="article-title">{title}</h1>
+          <div class="article-meta">
+            <time datetime={formattedDate}>{formattedDate}</time>
+            {tags.length > 0 && (
+              <span class="article-tags">
+                {tags.map((tag) => <TagBadge tag={tag} />)}
+              </span>
+            )}
+          </div>
+        </header>
+
+        <div class="article-body">
+          <Content />
+        </div>
+      </article>
+
+      {DemoComponent && (
+        <div class="demo-section">
+          <h2 class="demo-heading">🧪 实验区</h2>
+          <div class="demo-body">
+            <DemoComponent />
+          </div>
+        </div>
+      )}
+
+      <!-- Prev/Next Navigation -->
+      <nav class="article-nav">
+        <div class="prev">
+          {prevPost && (
+            <a href={`/posts/${prevPost.slug}/`}>
+              <span class="nav-label">← 上一篇文章</span>
+              {prevPost.data.title}
+            </a>
+          )}
+        </div>
+        <div class="next">
+          {nextPost && (
+            <a href={`/posts/${nextPost.slug}/`}>
+              <span class="nav-label">下一篇文章 →</span>
+              {nextPost.data.title}
+            </a>
+          )}
+        </div>
+      </nav>
+
+      <nav class="back-nav">
+        <a href="/">&larr; 返回文章列表</a>
+      </nav>
+    </div>
   </div>
 </BaseLayout>
 
@@ -81,7 +133,7 @@ if (demo) {
   .article-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #111;
+    color: var(--text-heading);
     margin-bottom: 0.5rem;
     line-height: 1.3;
   }
@@ -96,13 +148,35 @@ if (demo) {
     display: flex;
     gap: 0.35rem;
   }
-  .back-nav {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-light);
-  }
-  .back-nav a {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
 </style>
+
+<script>
+  // Highlight current ToC item on scroll
+  const tocLinks = document.querySelectorAll("[data-toc-link]");
+  if (tocLinks.length > 0) {
+    const headings = Array.from(
+      document.querySelectorAll(".article-body h2, .article-body h3")
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            tocLinks.forEach((link) => {
+              const href = link.getAttribute("href");
+              if (href === `#${id}`) {
+                link.classList.add("active");
+              } else {
+                link.classList.remove("active");
+              }
+            });
+          }
+        });
+      },
+      { rootMargin: "-80px 0px -70% 0px" }
+    );
+
+    headings.forEach((h) => observer.observe(h));
+  }
+</script>

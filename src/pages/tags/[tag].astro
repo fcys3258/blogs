@@ -19,7 +19,7 @@ const posts = allPosts
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
-<BaseLayout title={`#${tag}`}>
+<BaseLayout title={`#${tag}`} totalPosts={allPosts.length}>
   <div class="container">
     <section class="tag-header">
       <h1>#{tag}</h1>

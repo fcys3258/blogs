@@ -1,0 +1,73 @@
+---
+import { SITE_CONFIG } from "../site.config.ts";
+
+const { contact } = SITE_CONFIG;
+---
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <section class="footer-contact">
+      <h3>联系我</h3>
+      <ul>
+        {contact.email && (
+          <li>📧 <a href={`mailto:${contact.email}`}>{contact.email}</a></li>
+        )}
+        {contact.github && (
+          <li>🔗 <a href={contact.github} target="_blank" rel="noopener">GitHub</a></li>
+        )}
+      </ul>
+    </section>
+    <div class="footer-copyright">
+      <span>&copy; {new Date().getFullYear()} {SITE_CONFIG.title}</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-soft);
+    flex-shrink: 0;
+  }
+  .footer-inner {
+    width: var(--content-width);
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+  .footer-contact {
+    margin-bottom: 1.25rem;
+  }
+  .footer-contact h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .footer-contact ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+  }
+  .footer-contact li {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .footer-contact a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .footer-contact a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .footer-copyright {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--text-light);
+  }
+</style>

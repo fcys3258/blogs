@@ -11,7 +11,7 @@ const posts = allPosts
 const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 ---
 
-<BaseLayout description="计算数学学习笔记">
+<BaseLayout description="计算数学学习笔记" totalPosts={posts.length}>
   <div class="container">
     <section class="hero">
       <h1 class="hero-title">数值笔记</h1>

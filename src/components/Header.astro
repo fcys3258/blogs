@@ -1,17 +1,51 @@
 ---
+import { SITE_CONFIG } from "../site.config.ts";
+
 export interface Props {
-  title?: string;
+  totalPosts?: number;
 }
 
-const { title = "📐 数值笔记" } = Astro.props;
+const { totalPosts = 0 } = Astro.props;
+const { author, avatar } = SITE_CONFIG;
 ---
 
-<header class="header">
+<header class="header" id="site-header">
   <div class="header-inner">
-    <a href="/" class="brand">{title}</a>
-    <nav class="nav">
-      <a href="/">文章</a>
-    </nav>
+    <!-- Left: avatar + name -->
+    <a href="/" class="brand">
+      <img
+        src={avatar}
+        alt={author}
+        class="avatar"
+        width="36"
+        height="36"
+        loading="eager"
+      />
+      <span class="brand-name">{author}</span>
+    </a>
+
+    <!-- Center: search bar -->
+    <div class="search-wrapper" id="search-wrapper">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="搜索文章标题..."
+        autocomplete="off"
+      />
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Right: article count + dark toggle -->
+    <div class="header-actions">
+      <span class="post-count">{totalPosts} 篇文章</span>
+      <button
+        class="theme-toggle"
+        id="theme-toggle"
+        aria-label="切换深色模式"
+        title="切换深色模式"
+      >🌙</button>
+    </div>
   </div>
 </header>
 
@@ -20,33 +54,234 @@ const { title = "📐 数值笔记" } = Astro.props;
     border-bottom: 1px solid var(--border-light);
     position: sticky;
     top: 0;
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--header-bg);
     backdrop-filter: blur(8px);
     z-index: 100;
   }
   .header-inner {
-    max-width: var(--max-width);
+    width: var(--content-width);
+    max-width: var(--content-max);
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.85rem 1.5rem;
+    gap: 1.5rem;
+    padding: 0.6rem 1.5rem;
   }
   .brand {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
     text-decoration: none;
+    flex-shrink: 0;
   }
   .brand:hover { text-decoration: none; }
-  .nav {
-    display: flex;
-    gap: 1.25rem;
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
   }
-  .nav a {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+  .brand-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-heading);
+    white-space: nowrap;
+  }
+
+  /* Search */
+  .search-wrapper {
+    flex: 1;
+    max-width: 380px;
+    position: relative;
+  }
+  .search-input {
+    width: 100%;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    background: var(--bg-soft);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  .search-input::placeholder {
+    color: var(--text-light);
+  }
+  .search-results {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 200;
+  }
+  .search-results.active {
+    display: block;
+  }
+  .search-result-item {
+    display: block;
+    padding: 0.6rem 0.85rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover {
+    background: var(--bg-hover);
     text-decoration: none;
   }
-  .nav a:hover { color: var(--text); }
+  .search-result-title {
+    font-size: 0.82rem;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .search-result-date {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-top: 0.1rem;
+  }
+  .search-no-results {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.78rem;
+    color: var(--text-light);
+    text-align: center;
+  }
+
+  /* Actions */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+  .post-count {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.35rem 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: background 0.2s;
+  }
+  .theme-toggle:hover {
+    background: var(--bg-hover);
+  }
 </style>
+
+<script>
+  // Search functionality
+  let searchIndex: any[] = [];
+
+  async function loadSearchIndex() {
+    try {
+      const resp = await fetch("/search-index.json");
+      searchIndex = await resp.json();
+    } catch (e) {
+      console.warn("Search index not available");
+    }
+  }
+
+  const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  const searchResults = document.getElementById("search-results")!;
+
+  searchInput?.addEventListener("input", () => {
+    const query = searchInput.value.trim().toLowerCase();
+    if (!query) {
+      searchResults.classList.remove("active");
+      return;
+    }
+
+    const matches = searchIndex
+      .filter((post: any) => post.title.toLowerCase().includes(query))
+      .slice(0, 8);
+
+    if (matches.length === 0) {
+      searchResults.innerHTML =
+        '<div class="search-no-results">没有匹配的文章</div>';
+    } else {
+      searchResults.innerHTML = matches
+        .map(
+          (post: any) => `
+          <a href="/posts/${post.slug}/" class="search-result-item">
+            <div class="search-result-title">${escapeHtml(post.title)}</div>
+            <div class="search-result-date">${post.date}</div>
+          </a>`
+        )
+        .join("");
+    }
+    searchResults.classList.add("active");
+  });
+
+  // Close search on outside click
+  document.addEventListener("click", (e) => {
+    const wrapper = document.getElementById("search-wrapper");
+    if (wrapper && !wrapper.contains(e.target as Node)) {
+      searchResults.classList.remove("active");
+    }
+  });
+
+  function escapeHtml(text: string): string {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Load index on focus
+  searchInput?.addEventListener("focus", () => {
+    if (searchIndex.length === 0) loadSearchIndex();
+  });
+
+  // Also load on first input
+  searchInput?.addEventListener(
+    "input",
+    () => {
+      if (searchIndex.length === 0) loadSearchIndex();
+    },
+    { once: true }
+  );
+
+  // Dark mode toggle
+  const themeToggle = document.getElementById("theme-toggle")!;
+  themeToggle.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    const next = current === "dark" ? "light" : "dark";
+    setTheme(next);
+  });
+
+  function setTheme(theme: string) {
+    document.documentElement.setAttribute("data-theme", theme);
+    themeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
+    try { localStorage.setItem("theme", theme); } catch {}
+  }
+
+  // Init theme
+  const saved = (() => { try { return localStorage.getItem("theme"); } catch { return null; } })();
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  setTheme(saved || (prefersDark ? "dark" : "light"));
+
+  // Listen for system changes
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+    if (!localStorage.getItem("theme")) {
+      setTheme(e.matches ? "dark" : "light");
+    }
+  });
+</script>
