@@ -18,14 +18,32 @@ type Props = {
 const { post } = Astro.props;
 const { Content, headings } = await post.render();
 
-// Strip LaTeX math delimiters from heading text for clean ToC display
-function cleanHeadingText(text: string): string {
-  return text
-    .replace(/\$\$.*?\$\$/g, '')
-    .replace(/\$.*?\$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+// Extract clean heading text from raw markdown (before KaTeX processing)
+// The rendered headings have KaTeX HTML with duplicated text content
+function extractRawHeadings(rawBody: string): { text: string; slug: string }[] {
+  const headingRegex = /^(#{2,3})\s+(.+)$/gm;
+  const result: { text: string; slug: string }[] = [];
+  let match;
+  while ((match = headingRegex.exec(rawBody)) !== null) {
+    // Strip LaTeX math: $...$ and $$...$$
+    let text = match[2]
+      .replace(/\$\$([^$]*)\$\$/g, '$1')
+      .replace(/\$([^$]*)\$/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Generate slug matching Astro's convention
+    const slug = text
+      .toLowerCase()
+      .replace(/[^\w一-鿿\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    result.push({ text, slug });
+  }
+  return result;
 }
+
+const rawHeadings = extractRawHeadings(post.body || '');
 const { title, date, tags, demo } = post.data;
 const formattedDate = date.toISOString().slice(0, 10);
 
@@ -60,14 +78,14 @@ if (demo) {
         <div class="toc-heading">目录</div>
         <nav>
           <ul>
-            {headings.map((h) => (
+            {rawHeadings.map((h, i) => (
               <li>
                 <a
-                  href={`#${h.slug}`}
-                  class={`toc-h${h.depth}`}
+                  href={`#${headings[i]?.slug || h.slug}`}
+                  class={`toc-h${headings[i]?.depth || 2}`}
                   data-toc-link
                 >
-                  {cleanHeadingText(h.text)}
+                  {h.text}
                 </a>
               </li>
             ))}
