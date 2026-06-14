@@ -6,14 +6,14 @@ export const SITE_CONFIG = {
   // 博客名称
   title: "数值笔记",
   // 作者名称（顶栏显示）
-  author: "Fcys",
+  author: "风吹已散",
   // 头像路径（相对于 public/ 目录）
-  avatar: "/figure.png",
+  avatar: "figure.png",
 
   // 联系方式（显示在底栏"联系我"区域）
   contact: {
-    email: "your-email@example.com",
-    github: "https://github.com/your-username",
+    email: "yihuan_chen@qq.com",
+    github: "https://github.com/fcys3258",
     // 可以添加更多联系方式
     // twitter: "https://twitter.com/...",
     // orcid: "https://orcid.org/...",
@@ -27,6 +27,6 @@ export const SITE_CONFIG = {
   // 分页配置
   pagination: {
     // 每页显示文章数
-    pageSize: 2,
+    pageSize: 10,
   },
 } as const;
