@@ -9,8 +9,8 @@ export const SITE_CONFIG = {
   author: "风吹已散",
   // 博客简介（首页和 SEO 描述）
   description: "数值计算笔记，记录数值计算相关的知识和经验",
-  // 头像路径（相对于 public/ 目录）
-  avatar: "figure.png",
+  // 头像路径（以 / 开头，相对于网站根目录）
+  avatar: "/figure.png",
 
   // 联系方式（显示在底栏"联系我"区域）
   contact: {
