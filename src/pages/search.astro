@@ -36,17 +36,27 @@ const totalPosts = allPosts.length;
   .search-results-page .card {
     padding: 1.25rem 0;
     border-bottom: 1px solid var(--border-light);
+    position: relative;
   }
-  .search-results-page .card-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    margin-bottom: 0.35rem;
-  }
-  .search-results-page .card-title a {
-    color: var(--text-heading);
+  .search-results-page .card-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
     text-decoration: none;
   }
-  .search-results-page .card-title a:hover {
+  .search-results-page .card-title {
+    margin-bottom: 0.35rem;
+    position: relative;
+    z-index: 1;
+  }
+  .search-results-page .card-title-link {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    text-decoration: none;
+    pointer-events: auto;
+  }
+  .search-results-page .card-overlay:hover ~ .card-title .card-title-link {
     color: var(--accent);
   }
   .search-results-page .card-meta {
@@ -56,18 +66,34 @@ const totalPosts = allPosts.length;
     font-size: 0.8rem;
     color: var(--text-light);
     margin-bottom: 0.25rem;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
   }
-  .search-results-page .card-desc {
-    font-size: 0.85rem;
+  .search-results-page .card-meta time {
+    pointer-events: none;
+  }
+  .search-results-page .card-tags {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    pointer-events: auto;
+  }
+  .search-results-page .tag-badge {
+    display: inline-block;
+    font-size: 0.68rem;
     color: var(--text-muted);
-    margin-top: 0.4rem;
+    background: var(--accent-bg);
+    padding: 0.12em 0.5em;
+    border-radius: 4px;
+    text-decoration: none;
+    line-height: 1.5;
   }
-  .loading {
-    padding: 3rem 0;
-    color: var(--text-light);
-    text-align: center;
+  .search-results-page .tag-badge:hover {
+    background: var(--bg-hover);
+    text-decoration: none;
   }
-  .no-results {
+  .loading, .no-results {
     padding: 3rem 0;
     color: var(--text-light);
     text-align: center;
@@ -102,12 +128,13 @@ const totalPosts = allPosts.length;
           .map(
             (post: any) => `
             <article class="card">
-              <div class="card-title">
-                <a href="/posts/${post.slug}/">${escapeHtml(post.title)}</a>
-              </div>
+              <a href="/posts/${post.slug}/" class="card-overlay" aria-label="${escapeHtml(post.title)}"></a>
+              <h2 class="card-title">
+                <a href="/posts/${post.slug}/" class="card-title-link">${escapeHtml(post.title)}</a>
+              </h2>
               <div class="card-meta">
                 <time>${post.date}</time>
-                <span>${(post.tags || []).join(" · ")}</span>
+                <span class="card-tags">${(post.tags || []).map((t: string) => `<a href="/tags/${encodeURIComponent(t)}" class="tag-badge">${escapeHtml(t)}</a>`).join("")}</span>
               </div>
             </article>`
           )

@@ -30,10 +30,9 @@ const { author, avatar } = SITE_CONFIG;
         type="text"
         id="search-input"
         class="search-input"
-        placeholder="搜索文章标题..."
+        placeholder="搜索文章标题，按回车..."
         autocomplete="off"
       />
-      <div class="search-results" id="search-results"></div>
     </div>
 
     <!-- Right: article count + dark toggle -->
@@ -114,52 +113,6 @@ const { author, avatar } = SITE_CONFIG;
   .search-input::placeholder {
     color: var(--text-light);
   }
-  .search-results {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 4px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    max-height: 320px;
-    overflow-y: auto;
-    z-index: 200;
-  }
-  .search-results.active {
-    display: block;
-  }
-  .search-result-item {
-    display: block;
-    padding: 0.6rem 0.85rem;
-    text-decoration: none;
-    border-bottom: 1px solid var(--border-light);
-  }
-  .search-result-item:last-child { border-bottom: none; }
-  .search-result-item:hover {
-    background: var(--bg-hover);
-    text-decoration: none;
-  }
-  .search-result-title {
-    font-size: 0.82rem;
-    color: var(--text);
-    font-weight: 500;
-  }
-  .search-result-date {
-    font-size: 0.7rem;
-    color: var(--text-light);
-    margin-top: 0.1rem;
-  }
-  .search-no-results {
-    padding: 0.75rem 0.85rem;
-    font-size: 0.78rem;
-    color: var(--text-light);
-    text-align: center;
-  }
-
   /* Actions */
   .header-actions {
     display: flex;
@@ -188,87 +141,16 @@ const { author, avatar } = SITE_CONFIG;
 </style>
 
 <script>
-  // Search functionality
-  let searchIndex: any[] = [];
-
-  async function loadSearchIndex() {
-    try {
-      const resp = await fetch("/search-index.json");
-      searchIndex = await resp.json();
-    } catch (e) {
-      console.warn("Search index not available");
-    }
-  }
-
-  const searchInput = document.getElementById("search-input") as HTMLInputElement;
-  const searchResults = document.getElementById("search-results")!;
-
-  searchInput?.addEventListener("input", () => {
-    const query = searchInput.value.trim().toLowerCase();
-    if (!query) {
-      searchResults.classList.remove("active");
-      return;
-    }
-
-    const matches = searchIndex
-      .filter((post: any) => post.title.toLowerCase().includes(query))
-      .slice(0, 8);
-
-    if (matches.length === 0) {
-      searchResults.innerHTML =
-        '<div class="search-no-results">没有匹配的文章</div>';
-    } else {
-      searchResults.innerHTML = matches
-        .map(
-          (post: any) => `
-          <a href="/posts/${post.slug}/" class="search-result-item">
-            <div class="search-result-title">${escapeHtml(post.title)}</div>
-            <div class="search-result-date">${post.date}</div>
-          </a>`
-        )
-        .join("");
-    }
-    searchResults.classList.add("active");
-  });
-
-  // Close search on outside click
-  document.addEventListener("click", (e) => {
-    const wrapper = document.getElementById("search-wrapper");
-    if (wrapper && !wrapper.contains(e.target as Node)) {
-      searchResults.classList.remove("active");
-    }
-  });
-
   // Redirect to search page on Enter
+  const searchInput = document.getElementById("search-input") as HTMLInputElement;
   searchInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       const query = searchInput.value.trim();
       if (query) {
-        searchResults.classList.remove("active");
         window.location.href = `/search?q=${encodeURIComponent(query)}`;
       }
     }
   });
-
-  function escapeHtml(text: string): string {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  // Load index on focus
-  searchInput?.addEventListener("focus", () => {
-    if (searchIndex.length === 0) loadSearchIndex();
-  });
-
-  // Also load on first input
-  searchInput?.addEventListener(
-    "input",
-    () => {
-      if (searchIndex.length === 0) loadSearchIndex();
-    },
-    { once: true }
-  );
 
   // Dark mode toggle
   const themeToggle = document.getElementById("theme-toggle")!;

@@ -177,7 +177,19 @@ if (demo) {
   }
 </style>
 
+<button class="toc-toggle" id="toc-toggle" aria-label="目录">☰</button>
+
 <script>
+  // Mobile TOC toggle
+  const tocToggle = document.getElementById("toc-toggle")!;
+  const tocSidebar = document.getElementById("toc-sidebar");
+  if (tocToggle && tocSidebar) {
+    tocToggle.addEventListener("click", () => {
+      const isOpen = tocSidebar.classList.toggle("open");
+      tocToggle.textContent = isOpen ? "✕" : "☰";
+    });
+  }
+
   // Highlight current ToC item on scroll
   const tocLinks = document.querySelectorAll("[data-toc-link]");
   if (tocLinks.length > 0) {

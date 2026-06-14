@@ -27,6 +27,6 @@ export const SITE_CONFIG = {
   // 分页配置
   pagination: {
     // 每页显示文章数
-    pageSize: 15,
+    pageSize: 2,
   },
 } as const;

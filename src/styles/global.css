@@ -287,6 +287,60 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; }
   padding: 0 1.5rem;
 }
 
+/* === Mobile TOC toggle === */
+.toc-toggle {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 110;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Mobile responsive === */
+@media (max-width: 900px) {
+  :root {
+    --content-width: 92%;
+  }
+
+  .article-layout {
+    flex-direction: column;
+  }
+
+  .toc-sidebar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: none;
+    z-index: 105;
+    background: var(--bg);
+    padding: 3rem 1.5rem 2rem;
+    border-right: none;
+    overflow-y: auto;
+  }
+  .toc-sidebar.open {
+    display: block;
+  }
+
+  .toc-toggle {
+    display: flex;
+  }
+}
+
 /* === Scrollbar styling === */
 .toc-sidebar::-webkit-scrollbar { width: 4px; }
 .toc-sidebar::-webkit-scrollbar-track { background: transparent; }
