@@ -7,6 +7,8 @@ export const SITE_CONFIG = {
   title: "数值笔记",
   // 作者名称（顶栏显示）
   author: "风吹已散",
+  // 博客简介（首页和 SEO 描述）
+  description: "计算数学学习笔记 · 理论推导 + 交互式数值实验",
   // 头像路径（相对于 public/ 目录）
   avatar: "figure.png",
 

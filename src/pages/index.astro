@@ -12,11 +12,11 @@ const posts = allPosts
 const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 ---
 
-<BaseLayout description="计算数学学习笔记" totalPosts={posts.length}>
+<BaseLayout description={SITE_CONFIG.description} totalPosts={posts.length}>
   <div class="container">
     <section class="hero">
-      <h1 class="hero-title">数值笔记</h1>
-      <p class="hero-sub">计算数学学习笔记 · 理论推导 + 交互式数值实验</p>
+      <h1 class="hero-title">{SITE_CONFIG.title}</h1>
+      <p class="hero-sub">{SITE_CONFIG.description}</p>
     </section>
 
     <div class="controls-bar">
