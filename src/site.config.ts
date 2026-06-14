@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   // 作者名称（顶栏显示）
   author: "风吹已散",
   // 博客简介（首页和 SEO 描述）
-  description: "计算数学学习笔记 · 理论推导 + 交互式数值实验",
+  description: "数值计算笔记，记录数值计算相关的知识和经验",
   // 头像路径（相对于 public/ 目录）
   avatar: "figure.png",
 
