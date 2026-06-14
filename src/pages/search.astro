@@ -33,66 +33,6 @@ const totalPosts = allPosts.length;
     color: var(--text-light);
     font-size: 0.9rem;
   }
-  .search-results-page .card {
-    padding: 1.25rem 0;
-    border-bottom: 1px solid var(--border-light);
-    position: relative;
-  }
-  .search-results-page .card-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    text-decoration: none;
-  }
-  .search-results-page .card-title {
-    margin-bottom: 0.35rem;
-    position: relative;
-    z-index: 1;
-  }
-  .search-results-page .card-title-link {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text-heading);
-    text-decoration: none;
-    pointer-events: auto;
-  }
-  .search-results-page .card-overlay:hover ~ .card-title .card-title-link {
-    color: var(--accent);
-  }
-  .search-results-page .card-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-bottom: 0.25rem;
-    position: relative;
-    z-index: 1;
-    pointer-events: none;
-  }
-  .search-results-page .card-meta time {
-    pointer-events: none;
-  }
-  .search-results-page .card-tags {
-    display: flex;
-    gap: 0.35rem;
-    flex-wrap: wrap;
-    pointer-events: auto;
-  }
-  .search-results-page .tag-badge {
-    display: inline-block;
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    background: var(--accent-bg);
-    padding: 0.12em 0.5em;
-    border-radius: 4px;
-    text-decoration: none;
-    line-height: 1.5;
-  }
-  .search-results-page .tag-badge:hover {
-    background: var(--bg-hover);
-    text-decoration: none;
-  }
   .loading, .no-results {
     padding: 3rem 0;
     color: var(--text-light);
