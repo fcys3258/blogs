@@ -76,6 +76,7 @@ const totalPosts = allPosts.length;
                 <time>${post.date}</time>
                 <span class="card-tags">${(post.tags || []).map((t: string) => `<a href="/tags/${encodeURIComponent(t)}" class="tag-badge">${escapeHtml(t)}</a>`).join("")}</span>
               </div>
+              ${post.description ? `<p class="card-desc">${escapeHtml(post.description)}</p>` : ""}
             </article>`
           )
           .join("");

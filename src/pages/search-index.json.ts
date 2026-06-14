@@ -9,6 +9,7 @@ export async function GET() {
       slug: post.slug,
       date: post.data.date.toISOString().slice(0, 10),
       tags: post.data.tags,
+      description: post.data.description || "",
     }));
 
   return new Response(JSON.stringify(index), {
