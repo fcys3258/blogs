@@ -30,11 +30,6 @@
 </div>
 
 <script>
-  declare global {
-    interface Window {
-      Plotly: any;
-    }
-  }
 
   type NumericFn = (x: number) => number;
   type DiffFn = (f: NumericFn, x: number, h: number) => number;
@@ -50,7 +45,8 @@
     label: string;
   }
 
-  function initFiniteDifferenceDemo() {
+  async function initFiniteDifferenceDemo() {
+    const { default: Plotly } = await import("plotly.js-basic-dist-min");
     const funcSelect = document.getElementById("fd-func-select") as HTMLSelectElement;
     const x0Input = document.getElementById("fd-x0") as HTMLInputElement;
     const formatBtns = document.querySelectorAll<HTMLButtonElement>("#fd-demo-root .format-btn");
@@ -188,7 +184,7 @@
         displaylogo: false,
       };
 
-      window.Plotly.newPlot(plotDiv, [traceMain, traceO1, traceO2], layout, config);
+      Plotly.newPlot(plotDiv, [traceMain, traceO1, traceO2], layout, config);
     }
 
     // Event listeners
@@ -204,19 +200,17 @@
       });
     });
 
-    // Load Plotly from CDN then render
-    if (window.Plotly) {
-      updatePlot();
-    } else {
-      const script = document.createElement("script");
-      script.src = "https://cdn.plot.ly/plotly-2.32.0.min.js";
-      script.onload = updatePlot;
-      document.head.appendChild(script);
-    }
+    updatePlot();
   }
 
-  // Run when component mounts
-  initFiniteDifferenceDemo();
+  void initFiniteDifferenceDemo().catch((error) => {
+    console.error("Plotly loading failed", error);
+    const plot = document.getElementById("fd-plot");
+    if (plot) {
+      plot.classList.add("plot-error");
+      plot.textContent = "实验图表加载失败，请刷新页面重试。";
+    }
+  });
 </script>
 
 <style>
@@ -246,7 +240,8 @@
     border-radius: 6px;
     font-size: 0.82rem;
     font-family: inherit;
-    background: #fff;
+    background: var(--bg);
+    color: var(--text);
   }
   .format-btns {
     display: flex;
@@ -259,7 +254,7 @@
     font-size: 0.78rem;
     font-family: inherit;
     color: var(--text-muted);
-    background: #fff;
+    background: var(--bg);
     cursor: pointer;
     transition: all 0.15s;
   }
@@ -273,6 +268,12 @@
   }
   .plot-container {
     width: 100%;
+  }
+  .plot-error {
+    min-height: 12rem;
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
   }
   .plot-note {
     font-size: 0.72rem;

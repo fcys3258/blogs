@@ -9,6 +9,7 @@
 
 /* === Light theme (default) === */
 :root {
+  color-scheme: light;
   --bg: #ffffff;
   --bg-soft: #f7f8fa;
   --bg-hover: #f0f0f0;
@@ -40,6 +41,7 @@
 
 /* === Dark theme === */
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0f1117;
   --bg-soft: #1a1b23;
   --bg-hover: #252632;
@@ -93,6 +95,12 @@ a {
   text-decoration: none;
 }
 a:hover { text-decoration: underline; }
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
 
 strong { font-weight: 600; color: var(--text-heading); }
 
@@ -472,4 +480,11 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; }
 .toc-sidebar::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

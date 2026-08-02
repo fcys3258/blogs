@@ -1,13 +1,13 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ArticleCard from "../../components/ArticleCard.astro";
-import { getCollection } from "astro:content";
+import { getPublishedPosts, postPath } from "../../lib/posts";
 import { SITE_CONFIG } from "../../site.config.ts";
 
 const PAGE_SIZE = SITE_CONFIG.pagination.pageSize;
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
+  const posts = await getPublishedPosts();
   const allTags = [...new Set(posts.flatMap((p) => p.data.tags))];
   return allTags.map((tag) => ({
     params: { tag },
@@ -16,13 +16,11 @@ export async function getStaticPaths() {
 }
 
 const { tag } = Astro.props;
-const allPosts = await getCollection("posts");
-const posts = allPosts
-  .filter((p) => p.data.tags.includes(tag))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const allPosts = await getPublishedPosts();
+const posts = allPosts.filter((post) => post.data.tags.includes(tag));
 ---
 
-<BaseLayout title={`#${tag}`} totalPosts={allPosts.length}>
+<BaseLayout title={`#${tag}`} description={`标签 ${tag} 下的文章`} totalPosts={allPosts.length}>
   <div class="container">
     <section class="tag-header">
       <h1>#{tag}</h1>
@@ -31,7 +29,13 @@ const posts = allPosts
 
     <div class="controls-bar">
       <span></span>
-      <button class="sort-btn" id="sort-btn" title="切换排序">
+      <button
+        type="button"
+        class="sort-btn"
+        id="sort-btn"
+        title="切换排序"
+        aria-label="切换为最早文章在前"
+      >
         <span>🕐</span>
         <span id="sort-label">最新在前</span>
       </button>
@@ -43,7 +47,7 @@ const posts = allPosts
           <ArticleCard
             title={post.data.title}
             date={post.data.date}
-            slug={post.slug}
+            href={postPath(post)}
             tags={post.data.tags}
             description={post.data.description}
           />
@@ -117,117 +121,6 @@ const posts = allPosts
 </style>
 
 <script>
-  const PAGE_SIZE = parseInt(document.getElementById("page-data")!.dataset.pageSize || "15");
-  const postItems = Array.from(document.querySelectorAll(".post-item")) as HTMLElement[];
-  const totalPages = Math.ceil(postItems.length / PAGE_SIZE);
-
-  function getParams() {
-    const p = new URLSearchParams(window.location.search);
-    const page = Math.max(1, parseInt(p.get("page") || "1") || 1);
-    const sort = p.get("sort") === "asc" ? "asc" : "desc";
-    return { page, sort };
-  }
-
-  function updateParams(page: number, sort: string) {
-    const p = new URLSearchParams();
-    if (page > 1) p.set("page", String(page));
-    if (sort === "asc") p.set("sort", "asc");
-    const qs = p.toString();
-    const base = window.location.pathname;
-    const url = qs ? `${base}?${qs}` : base;
-    window.history.replaceState(null, "", url);
-  }
-
-  function applySort(sort: string) {
-    const list = document.getElementById("post-list")!;
-    const items = Array.from(list.querySelectorAll(".post-item")) as HTMLElement[];
-    items.sort((a, b) => {
-      const da = a.dataset.date || "";
-      const db = b.dataset.date || "";
-      return sort === "asc" ? da.localeCompare(db) : db.localeCompare(da);
-    });
-    items.forEach((item) => list.appendChild(item));
-  }
-
-  function showPage(page: number) {
-    const list = document.getElementById("post-list")!;
-    const items = Array.from(list.querySelectorAll(".post-item")) as HTMLElement[];
-    const start = (page - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    items.forEach((item, i) => {
-      item.classList.toggle("hidden", i < start || i >= end);
-    });
-  }
-
-  function renderPagination(page: number, sort: string) {
-    const container = document.getElementById("pagination")!;
-    if (totalPages <= 1) {
-      container.innerHTML = "";
-      return;
-    }
-
-    let html = "";
-    const base = window.location.pathname;
-    html += `<a href="${base}?page=${Math.max(1, page - 1)}&sort=${sort}" class="page-btn ${page <= 1 ? "disabled" : ""}" data-page="${page - 1}">←</a>`;
-
-    const pages: (number | string)[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      if (page > 3) pages.push("...");
-      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
-        pages.push(i);
-      }
-      if (page < totalPages - 2) pages.push("...");
-      pages.push(totalPages);
-    }
-
-    for (const p of pages) {
-      if (p === "...") {
-        html += '<span class="page-ellipsis">…</span>';
-      } else {
-        html += `<a href="${base}?page=${p}&sort=${sort}" class="page-btn ${p === page ? "active" : ""}" data-page="${p}">${p}</a>`;
-      }
-    }
-
-    html += `<a href="${base}?page=${Math.min(totalPages, page + 1)}&sort=${sort}" class="page-btn ${page >= totalPages ? "disabled" : ""}" data-page="${page + 1}">→</a>`;
-    container.innerHTML = html;
-
-    container.querySelectorAll(".page-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const newPage = parseInt((btn as HTMLElement).dataset.page || "1");
-        if (newPage >= 1 && newPage <= totalPages) {
-          updateParams(newPage, sort);
-          showPage(newPage);
-          renderPagination(newPage, sort);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-      });
-    });
-  }
-
-  function updateSortUI(sort: string) {
-    const label = document.getElementById("sort-label");
-    if (label) label.textContent = sort === "asc" ? "最早在前" : "最新在前";
-  }
-
-  // Init
-  const { page, sort } = getParams();
-  applySort(sort);
-  showPage(page);
-  renderPagination(page, sort);
-  updateSortUI(sort);
-
-  // Sort button
-  document.getElementById("sort-btn")!.addEventListener("click", () => {
-    const { sort } = getParams();
-    const newSort = sort === "desc" ? "asc" : "desc";
-    updateParams(1, newSort);
-    applySort(newSort);
-    showPage(1);
-    renderPagination(1, newSort);
-    updateSortUI(newSort);
-  });
+  import { initPostListControls } from "../../scripts/postListControls";
+  initPostListControls();
 </script>

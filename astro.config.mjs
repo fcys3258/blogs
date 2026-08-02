@@ -1,15 +1,20 @@
 import { defineConfig } from 'astro/config';
+import { unified } from '@astrojs/markdown-remark';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 export default defineConfig({
-  // TODO: 部署前修改为实际域名和路径
-  // site: 'https://yourname.github.io',
-  // base: '/your-repo-name',
-  site: 'http://localhost:4321',
+  // Canonical production URL. Vercel handles DNS and deployments.
+  site: 'https://zephyrise.cn',
   base: '/',
   markdown: {
-    remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex],
+    processor: unified({
+      remarkPlugins: [remarkMath],
+      rehypePlugins: [rehypeKatex],
+    }),
+  },
+  // Plotly's basic bundle is intentionally lazy-loaded by demo pages (~984 kB).
+  vite: {
+    build: { chunkSizeWarningLimit: 1100 },
   },
 });

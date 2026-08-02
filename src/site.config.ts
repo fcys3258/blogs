@@ -3,6 +3,8 @@
  * 修改此文件即可更新全站信息
  */
 export const SITE_CONFIG = {
+  // 生产环境域名（用于 canonical、RSS 与 sitemap）
+  url: "https://zephyrise.cn",
   // 博客名称
   title: "数值笔记",
   // 作者名称（顶栏显示）

@@ -1,56 +1,49 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import TagBadge from "../../components/TagBadge.astro";
-import { getCollection, type CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import { getPublishedPosts, postPath, type Post } from "../../lib/posts";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
+  const posts = await getPublishedPosts();
   return posts.map((post) => ({
-    params: { slug: post.slug },
+    params: { slug: post.id },
     props: { post },
   }));
 }
 
-type Props = {
-  post: CollectionEntry<"posts">;
-};
+type Props = { post: Post };
 
 const { post } = Astro.props;
-const { Content, headings } = await post.render();
+const { Content, headings } = await render(post);
 
-// Extract clean heading text from raw markdown (before KaTeX processing)
-// The rendered headings have KaTeX HTML with duplicated text content
-function extractRawHeadings(rawBody: string): { text: string; slug: string }[] {
+// Keep ToC labels readable when a heading contains KaTeX markup.
+function extractRawHeadingText(rawBody: string): string[] {
   const headingRegex = /^(#{2,3})\s+(.+)$/gm;
-  const result: { text: string; slug: string }[] = [];
-  let match;
-  while ((match = headingRegex.exec(rawBody)) !== null) {
-    // Strip LaTeX math: $...$ and $$...$$
-    let text = match[2]
-      .replace(/\$\$([^$]*)\$\$/g, '$1')
-      .replace(/\$([^$]*)\$/g, '$1')
-      .replace(/\s+/g, ' ')
-      .trim();
-    // Generate slug matching Astro's convention
-    const slug = text
-      .toLowerCase()
-      .replace(/[^\w一-鿿\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-    result.push({ text, slug });
-  }
-  return result;
+  return Array.from(rawBody.matchAll(headingRegex), (match) =>
+    match[2]
+      .replace(/\$\$([^$]*)\$\$/g, "$1")
+      .replace(/\$([^$]*)\$/g, "$1")
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/[`*_~]/g, "")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
 }
 
-const rawHeadings = extractRawHeadings(post.body || '');
+const renderedHeadings = headings.filter(({ depth }) => depth === 2 || depth === 3);
+const rawHeadingText = extractRawHeadingText(post.body ?? "");
+const tocHeadings = renderedHeadings.map((heading, index) => ({
+  ...heading,
+  text: rawHeadingText[index] ?? heading.text,
+}));
 const { title, date, tags, demo } = post.data;
 const formattedDate = date.toISOString().slice(0, 10);
 
 // All posts sorted by date for prev/next navigation
-const allPosts = (await getCollection("posts"))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const currentIdx = allPosts.findIndex((p) => p.slug === post.slug);
+const allPosts = await getPublishedPosts();
+const currentIdx = allPosts.findIndex((candidate) => candidate.id === post.id);
 const prevPost = currentIdx < allPosts.length - 1 ? allPosts[currentIdx + 1] : null;
 const nextPost = currentIdx > 0 ? allPosts[currentIdx - 1] : null;
 
@@ -64,28 +57,29 @@ if (demo) {
   const matchKey = Object.keys(modules).find((key) =>
     key.endsWith(`/${demo}.astro`)
   );
-  if (matchKey) {
-    DemoComponent = modules[matchKey]!.default;
+  if (!matchKey) {
+    throw new Error(`文章 ${post.id} 引用了不存在的实验组件：${demo}`);
   }
+  DemoComponent = modules[matchKey]!.default;
 }
 ---
 
-<BaseLayout title={title} description={post.data.description}>
+<BaseLayout title={title} description={post.data.description} totalPosts={allPosts.length} type="article">
   <div class="article-layout">
     <!-- ToC Sidebar -->
-    {headings.length > 0 && (
+    {tocHeadings.length > 0 && (
       <aside class="toc-sidebar" id="toc-sidebar">
         <div class="toc-heading">目录</div>
         <nav>
           <ul>
-            {rawHeadings.map((h, i) => (
+            {tocHeadings.map((heading) => (
               <li>
                 <a
-                  href={`#${headings[i]?.slug || h.slug}`}
-                  class={`toc-h${headings[i]?.depth || 2}`}
+                  href={`#${heading.slug}`}
+                  class={`toc-h${heading.depth}`}
                   data-toc-link
                 >
-                  {h.text}
+                  {heading.text}
                 </a>
               </li>
             ))}
@@ -127,7 +121,7 @@ if (demo) {
       <nav class="article-nav">
         <div class="prev">
           {prevPost && (
-            <a href={`/posts/${prevPost.slug}/`}>
+            <a href={postPath(prevPost)}>
               <span class="nav-label">← 上一篇文章</span>
               {prevPost.data.title}
             </a>
@@ -135,7 +129,7 @@ if (demo) {
         </div>
         <div class="next">
           {nextPost && (
-            <a href={`/posts/${nextPost.slug}/`}>
+            <a href={postPath(nextPost)}>
               <span class="nav-label">下一篇文章 →</span>
               {nextPost.data.title}
             </a>
@@ -177,45 +171,58 @@ if (demo) {
   }
 </style>
 
-<button class="toc-toggle" id="toc-toggle" aria-label="目录">☰</button>
+{tocHeadings.length > 0 && (
+  <button
+    type="button"
+    class="toc-toggle"
+    id="toc-toggle"
+    aria-label="打开目录"
+    aria-controls="toc-sidebar"
+    aria-expanded="false"
+  >☰</button>
+)}
 
 <script>
-  // Mobile TOC toggle
-  const tocToggle = document.getElementById("toc-toggle")!;
+  const tocToggle = document.getElementById("toc-toggle") as HTMLButtonElement | null;
   const tocSidebar = document.getElementById("toc-sidebar");
-  if (tocToggle && tocSidebar) {
-    tocToggle.addEventListener("click", () => {
-      const isOpen = tocSidebar.classList.toggle("open");
-      tocToggle.textContent = isOpen ? "✕" : "☰";
-    });
+
+  function setTocOpen(open: boolean) {
+    if (!tocToggle || !tocSidebar) return;
+    tocSidebar.classList.toggle("open", open);
+    tocToggle.textContent = open ? "✕" : "☰";
+    tocToggle.setAttribute("aria-expanded", String(open));
+    tocToggle.setAttribute("aria-label", open ? "关闭目录" : "打开目录");
   }
 
-  // Highlight current ToC item on scroll
-  const tocLinks = document.querySelectorAll("[data-toc-link]");
-  if (tocLinks.length > 0) {
-    const headings = Array.from(
-      document.querySelectorAll(".article-body h2, .article-body h3")
-    );
+  tocToggle?.addEventListener("click", () => {
+    setTocOpen(!tocSidebar?.classList.contains("open"));
+  });
 
+  document.querySelectorAll("[data-toc-link]").forEach((link) => {
+    link.addEventListener("click", () => setTocOpen(false));
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setTocOpen(false);
+  });
+
+  const tocLinks = document.querySelectorAll("[data-toc-link]");
+  const articleHeadings = document.querySelectorAll(
+    ".article-body h2, .article-body h3",
+  );
+
+  if (tocLinks.length > 0 && articleHeadings.length > 0) {
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.id;
-            tocLinks.forEach((link) => {
-              const href = link.getAttribute("href");
-              if (href === `#${id}`) {
-                link.classList.add("active");
-              } else {
-                link.classList.remove("active");
-              }
-            });
-          }
+        const visible = entries.find((entry) => entry.isIntersecting);
+        if (!visible) return;
+        const id = visible.target.id;
+        tocLinks.forEach((link) => {
+          link.classList.toggle("active", link.getAttribute("href") === `#${id}`);
         });
       },
-      { rootMargin: "-80px 0px -70% 0px" }
+      { rootMargin: "-80px 0px -70% 0px" },
     );
-
-    headings.forEach((h) => observer.observe(h));
+    articleHeadings.forEach((heading) => observer.observe(heading));
   }
 </script>

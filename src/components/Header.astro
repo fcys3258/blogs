@@ -25,15 +25,17 @@ const { author, avatar } = SITE_CONFIG;
     </a>
 
     <!-- Center: search bar -->
-    <div class="search-wrapper" id="search-wrapper">
+    <form class="search-wrapper" id="search-wrapper" action="/search/" method="get" role="search">
       <input
-        type="text"
+        type="search"
+        name="q"
         id="search-input"
         class="search-input"
-        placeholder="搜索文章标题，按回车..."
+        aria-label="搜索文章"
+        placeholder="搜索标题、摘要、标签或正文..."
         autocomplete="off"
       />
-    </div>
+    </form>
 
     <!-- Right: article count + dark toggle -->
     <div class="header-actions">
@@ -94,6 +96,7 @@ const { author, avatar } = SITE_CONFIG;
     max-width: 380px;
     position: relative;
   }
+    min-width: 0;
   .search-input {
     width: 100%;
     padding: 0.45rem 0.85rem;
@@ -138,42 +141,62 @@ const { author, avatar } = SITE_CONFIG;
   .theme-toggle:hover {
     background: var(--bg-hover);
   }
+
+  @media (max-width: 640px) {
+    .header-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem 0.75rem;
+      padding: 0.6rem 1rem;
+    }
+    .search-wrapper {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      max-width: none;
+      width: 100%;
+    }
+    .header-actions {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .post-count {
+      display: none;
+    }
+    .brand-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
 </style>
 
 <script>
-  // Redirect to search page on Enter
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
-  searchInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      const query = searchInput.value.trim();
-      if (query) {
-        window.location.href = `/search?q=${encodeURIComponent(query)}`;
-      }
-    }
-  });
+  searchInput.value = new URLSearchParams(window.location.search).get("q") ?? "";
 
   // Dark mode toggle
   const themeToggle = document.getElementById("theme-toggle")!;
   themeToggle.addEventListener("click", () => {
     const current = document.documentElement.getAttribute("data-theme");
     const next = current === "dark" ? "light" : "dark";
-    setTheme(next);
+    setTheme(next, true);
   });
 
-  function setTheme(theme: string) {
+  function setTheme(theme: string, persist = false) {
     document.documentElement.setAttribute("data-theme", theme);
     themeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
-    try { localStorage.setItem("theme", theme); } catch {}
+    themeToggle.setAttribute("aria-label", theme === "dark" ? "切换到浅色模式" : "切换到深色模式");
+    if (persist) {
+      try { localStorage.setItem("theme", theme); } catch {}
+      savedTheme = theme;
+    }
   }
 
   // Init theme
-  const saved = (() => { try { return localStorage.getItem("theme"); } catch { return null; } })();
+  let savedTheme = (() => { try { return localStorage.getItem("theme"); } catch { return null; } })();
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  setTheme(saved || (prefersDark ? "dark" : "light"));
+  setTheme(savedTheme || (prefersDark ? "dark" : "light"));
 
   // Listen for system changes
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-    if (!localStorage.getItem("theme")) {
+    if (!savedTheme) {
       setTheme(e.matches ? "dark" : "light");
     }
   });

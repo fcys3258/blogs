@@ -1,18 +1,21 @@
-import { getCollection } from "astro:content";
+import { getPublishedPosts } from "../lib/posts";
 
 export async function GET() {
-  const posts = await getCollection("posts");
+  const posts = await getPublishedPosts();
   const index = posts
-    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
     .map((post) => ({
       title: post.data.title,
-      slug: post.slug,
+      id: post.id,
       date: post.data.date.toISOString().slice(0, 10),
       tags: post.data.tags,
       description: post.data.description || "",
+      body: post.body ?? "",
     }));
 
   return new Response(JSON.stringify(index), {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=0, must-revalidate",
+    },
   });
 }

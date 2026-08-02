@@ -1,8 +1,10 @@
 ---
+import { tagPath } from "../lib/posts";
+
 const { tag } = Astro.props;
 ---
 
-<a href={`/tags/${tag}`} class="tag-badge">{tag}</a>
+<a href={tagPath(tag)} class="tag-badge">{tag}</a>
 
 <style>
   .tag-badge {

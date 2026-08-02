@@ -3,15 +3,23 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { SITE_CONFIG } from "../site.config.ts";
 import "../styles/global.css";
+import "katex/dist/katex.min.css";
 
 export interface Props {
   title?: string;
   description?: string;
   totalPosts?: number;
+  type?: "website" | "article";
 }
 
-const { title, description, totalPosts } = Astro.props;
+const { title, description, totalPosts, type = "website" } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE_CONFIG.title}` : SITE_CONFIG.title;
+const pageDescription = description ?? SITE_CONFIG.description;
+const canonicalURL = new URL(
+  Astro.url.pathname,
+  Astro.site ?? SITE_CONFIG.url,
+);
+const socialImageURL = new URL(SITE_CONFIG.avatar, canonicalURL.origin);
 ---
 
 <!doctype html>
@@ -20,9 +28,17 @@ const pageTitle = title ? `${title} · ${SITE_CONFIG.title}` : SITE_CONFIG.title
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{pageTitle}</title>
-    {description && <meta name="description" content={description} />}
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="alternate" type="application/rss+xml" title={SITE_CONFIG.title} href="/rss.xml" />
+    <meta property="og:type" content={type} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content={SITE_CONFIG.title} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={socialImageURL} />
     <!-- Prevent dark mode flash -->
     <script is:inline>
       (function(){try{var t=localStorage.getItem("theme");var d=t||(window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",d)}catch(e){}})();

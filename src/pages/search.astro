@@ -1,20 +1,22 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
+import { getPublishedPosts } from "../lib/posts";
+import { SITE_CONFIG } from "../site.config";
 
-const allPosts = await getCollection("posts");
-const totalPosts = allPosts.length;
+const posts = await getPublishedPosts();
+const searchIndexPath = SITE_CONFIG.search.indexPath;
 ---
 
-<BaseLayout title="搜索" totalPosts={totalPosts}>
+<BaseLayout title="搜索" description="搜索数值笔记中的文章" totalPosts={posts.length}>
   <div class="container">
     <section class="search-header">
       <h1>搜索结果</h1>
       <p id="search-query-display"></p>
     </section>
-    <section class="search-results-page" id="search-results-page">
+    <section class="search-results-page" id="search-results-page" aria-live="polite" aria-busy="true">
       <p class="loading">搜索中...</p>
     </section>
+    <div id="search-config" data-index-path={searchIndexPath} hidden></div>
     <nav class="back-nav">
       <a href="/">&larr; 返回首页</a>
     </nav>
@@ -33,7 +35,7 @@ const totalPosts = allPosts.length;
     color: var(--text-light);
     font-size: 0.9rem;
   }
-  .loading, .no-results {
+  .loading, :global(.no-results) {
     padding: 3rem 0;
     color: var(--text-light);
     text-align: center;
@@ -41,54 +43,91 @@ const totalPosts = allPosts.length;
 </style>
 
 <script>
+  interface SearchEntry {
+    title: string;
+    id: string;
+    date: string;
+    tags: string[];
+    description: string;
+    body: string;
+  }
+
   const params = new URLSearchParams(window.location.search);
-  const query = params.get("q")?.trim() || "";
+  const query = params.get("q")?.trim() ?? "";
   const display = document.getElementById("search-query-display")!;
   const container = document.getElementById("search-results-page")!;
+  const config = document.getElementById("search-config")!;
+  const indexPath = config.dataset.indexPath ?? "/search-index.json";
 
-  if (!query) {
-    display.textContent = "请输入搜索关键词";
-    container.innerHTML = '<p class="no-results">请在搜索栏输入关键词后按回车</p>';
-  } else {
-    display.textContent = `关键词："${escapeHtml(query)}"`;
+  const normalize = (value: string) =>
+    value.normalize("NFKC").toLocaleLowerCase("zh-CN");
 
-    fetch("/search-index.json")
-      .then((r) => r.json())
-      .then((index: any[]) => {
-        const results = index.filter((post: any) =>
-          post.title.toLowerCase().includes(query.toLowerCase())
-        );
-
-        if (results.length === 0) {
-          container.innerHTML = '<p class="no-results">没有找到匹配的文章</p>';
-          return;
-        }
-
-        container.innerHTML = results
-          .map(
-            (post: any) => `
-            <article class="card">
-              <a href="/posts/${post.slug}/" class="card-overlay" aria-label="${escapeHtml(post.title)}"></a>
-              <h2 class="card-title">
-                <a href="/posts/${post.slug}/" class="card-title-link">${escapeHtml(post.title)}</a>
-              </h2>
-              <div class="card-meta">
-                <time>${post.date}</time>
-                <span class="card-tags">${(post.tags || []).map((t: string) => `<a href="/tags/${encodeURIComponent(t)}" class="tag-badge">${escapeHtml(t)}</a>`).join("")}</span>
-              </div>
-              ${post.description ? `<p class="card-desc">${escapeHtml(post.description)}</p>` : ""}
-            </article>`
-          )
-          .join("");
-      })
-      .catch(() => {
-        container.innerHTML = '<p class="no-results">搜索索引加载失败</p>';
-      });
+  function postHref(id: string): string {
+    return `/posts/${id.split("/").map(encodeURIComponent).join("/")}/`;
   }
 
   function escapeHtml(text: string): string {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+    const element = document.createElement("div");
+    element.textContent = text;
+    return element.innerHTML;
   }
+
+  async function runSearch(): Promise<void> {
+    if (!query) {
+      display.textContent = "请输入搜索关键词";
+      container.innerHTML = '<p class="no-results">请在搜索栏输入关键词后按回车</p>';
+      container.setAttribute("aria-busy", "false");
+      return;
+    }
+
+    display.textContent = `关键词：“${query}”`;
+
+    try {
+      const response = await fetch(indexPath);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const index = (await response.json()) as SearchEntry[];
+      const terms = normalize(query).split(/\s+/).filter(Boolean);
+      const results = index.filter((post) => {
+        const searchable = normalize([
+          post.title,
+          post.description,
+          post.tags.join(" "),
+          post.body,
+        ].join("\n"));
+        return terms.every((term) => searchable.includes(term));
+      });
+
+      display.textContent = `关键词：“${query}”，找到 ${results.length} 篇文章`;
+      if (results.length === 0) {
+        container.innerHTML = '<p class="no-results">没有找到匹配的文章</p>';
+        return;
+      }
+
+      container.innerHTML = results.map((post) => {
+        const href = postHref(post.id);
+        const tags = post.tags.map((tag) =>
+          `<a href="/tags/${encodeURIComponent(tag)}/" class="tag-badge">${escapeHtml(tag)}</a>`,
+        ).join("");
+        return `
+          <article class="card">
+            <a href="${href}" class="card-overlay" aria-label="${escapeHtml(post.title)}"></a>
+            <h2 class="card-title">
+              <a href="${href}" class="card-title-link">${escapeHtml(post.title)}</a>
+            </h2>
+            <div class="card-meta">
+              <time datetime="${post.date}">${post.date}</time>
+              <span class="card-tags">${tags}</span>
+            </div>
+            ${post.description ? `<p class="card-desc">${escapeHtml(post.description)}</p>` : ""}
+          </article>`;
+      }).join("");
+    } catch (error) {
+      console.error("Search index loading failed", error);
+      container.innerHTML = '<p class="no-results">搜索索引加载失败，请稍后重试</p>';
+    } finally {
+      container.setAttribute("aria-busy", "false");
+    }
+  }
+
+  void runSearch();
 </script>

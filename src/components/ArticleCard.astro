@@ -4,21 +4,21 @@ import TagBadge from "./TagBadge.astro";
 export interface Props {
   title: string;
   date: Date;
-  slug: string;
+  href: string;
   tags: string[];
   description?: string;
 }
 
-const { title, date, slug, tags, description } = Astro.props;
+const { title, date, href, tags, description } = Astro.props;
 const formattedDate = date.toISOString().slice(0, 10);
 ---
 
 <article class="card">
   <!-- Invisible overlay link — covers entire card -->
-  <a href={`/posts/${slug}/`} class="card-overlay" aria-label={title}></a>
+  <a href={href} class="card-overlay" aria-label={title}></a>
 
   <h2 class="card-title">
-    <a href={`/posts/${slug}/`} class="card-title-link">{title}</a>
+    <a href={href} class="card-title-link">{title}</a>
   </h2>
   <div class="card-meta">
     <time datetime={formattedDate}>{formattedDate}</time>

@@ -2,16 +2,22 @@
   "name": "numerical-notes",
   "type": "module",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "check": "astro check",
     "build": "astro check && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.0",
-    "astro": "^4.16.0",
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/markdown-remark": "^7.2.2",
+    "astro": "^7.1.6",
     "katex": "^0.16.0",
+    "plotly.js-basic-dist-min": "^2.32.0",
     "rehype-katex": "^7.0.0",
     "remark-math": "^6.0.0",
     "typescript": "^5.5.0"
