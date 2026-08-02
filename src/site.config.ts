@@ -6,11 +6,11 @@ export const SITE_CONFIG = {
   // 生产环境域名（用于 canonical、RSS 与 sitemap）
   url: "https://zephyrise.cn",
   // 博客名称
-  title: "数值笔记",
+  title: "数学笔记",
   // 作者名称（顶栏显示）
   author: "风吹已散",
   // 博客简介（首页和 SEO 描述）
-  description: "数值计算笔记，记录数值计算相关的知识和经验",
+  description: "记录数学专业课程笔记、概念梳理、定理证明与专题学习",
   // 头像路径（以 / 开头，相对于网站根目录）
   avatar: "/figure-thumb.png",
 

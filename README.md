@@ -1,6 +1,6 @@
-# 数值笔记
+# 数学笔记
 
-部署在 [zephyrise.cn](https://zephyrise.cn) 的计算数学静态博客。项目使用 Astro、Markdown、KaTeX 和 Plotly；推送到 GitHub 后由 Vercel 自动构建并发布。
+部署在 [zephyrise.cn](https://zephyrise.cn) 的数学知识静态博客，用于记录数学专业常见课程、概念、定理证明与专题学习。项目使用 Astro、Markdown、KaTeX 和 Plotly；推送到 GitHub 后由 Vercel 自动构建并发布。
 
 ## 本地开发
 
@@ -26,7 +26,7 @@ npm run build
 ---
 title: "文章标题"
 date: 2026-08-02
-tags: ["数值分析"]
+tags: ["数学分析"]
 description: "用于列表、搜索和 SEO 的简短摘要"
 draft: false
 ---
