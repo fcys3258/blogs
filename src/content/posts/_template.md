@@ -1,6 +1,6 @@
 ---
 title: "文章模板"
-date: 2026-08-02
+date: 2026-08-02T15:00:00+08:00
 tags: ["示例标签"]
 description: "复制此文件后修改；draft 为 true 时不会发布。"
 draft: true

@@ -1,3 +1,4 @@
+import { formatPostDate } from "../lib/dates";
 import { getPublishedPosts } from "../lib/posts";
 
 export async function GET() {
@@ -6,7 +7,7 @@ export async function GET() {
     .map((post) => ({
       title: post.data.title,
       id: post.id,
-      date: post.data.date.toISOString().slice(0, 10),
+      date: formatPostDate(post.data.date),
       tags: post.data.tags,
       description: post.data.description || "",
       body: post.body ?? "",

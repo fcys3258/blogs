@@ -5,6 +5,8 @@
 export const SITE_CONFIG = {
   // 生产环境域名（用于 canonical、RSS 与 sitemap）
   url: "https://zephyrise.cn",
+  // 文章日期的展示时区；frontmatter 中仍应写明 UTC 偏移
+  timeZone: "Asia/Shanghai",
   // 博客名称
   title: "数学笔记",
   // 作者名称（顶栏显示）

@@ -4,9 +4,10 @@ export type Post = CollectionEntry<"posts">;
 
 export async function getPublishedPosts(): Promise<Post[]> {
   const posts = await getCollection("posts", ({ data }) => !data.draft);
-  return posts.sort(
-    (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-  );
+  return posts.sort((a, b) => {
+    const dateOrder = b.data.date.valueOf() - a.data.date.valueOf();
+    return dateOrder || b.id.localeCompare(a.id);
+  });
 }
 
 export function postPath(postOrId: Post | string): string {

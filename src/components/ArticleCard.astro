@@ -1,5 +1,6 @@
 ---
 import TagBadge from "./TagBadge.astro";
+import { formatPostDate } from "../lib/dates";
 
 export interface Props {
   title: string;
@@ -10,7 +11,8 @@ export interface Props {
 }
 
 const { title, date, href, tags, description } = Astro.props;
-const formattedDate = date.toISOString().slice(0, 10);
+const dateTime = date.toISOString();
+const formattedDate = formatPostDate(date);
 ---
 
 <article class="card">
@@ -21,7 +23,7 @@ const formattedDate = date.toISOString().slice(0, 10);
     <a href={href} class="card-title-link">{title}</a>
   </h2>
   <div class="card-meta">
-    <time datetime={formattedDate}>{formattedDate}</time>
+    <time datetime={dateTime}>{formattedDate}</time>
     {tags.length > 0 && (
       <span class="card-tags">
         {tags.map((tag) => <TagBadge tag={tag} />)}

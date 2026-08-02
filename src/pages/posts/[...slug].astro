@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import TagBadge from "../../components/TagBadge.astro";
 import { render } from "astro:content";
+import { formatPostDate } from "../../lib/dates";
 import { getPublishedPosts, postPath, type Post } from "../../lib/posts";
 
 export async function getStaticPaths() {
@@ -39,7 +40,8 @@ const tocHeadings = renderedHeadings.map((heading, index) => ({
   text: rawHeadingText[index] ?? heading.text,
 }));
 const { title, date, tags, demo } = post.data;
-const formattedDate = date.toISOString().slice(0, 10);
+const dateTime = date.toISOString();
+const formattedDate = formatPostDate(date);
 
 // All posts sorted by date for prev/next navigation
 const allPosts = await getPublishedPosts();
@@ -94,7 +96,7 @@ if (demo) {
         <header class="article-header">
           <h1 class="article-title">{title}</h1>
           <div class="article-meta">
-            <time datetime={formattedDate}>{formattedDate}</time>
+            <time datetime={dateTime}>{formattedDate}</time>
             {tags.length > 0 && (
               <span class="article-tags">
                 {tags.map((tag) => <TagBadge tag={tag} />)}

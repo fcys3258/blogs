@@ -52,9 +52,16 @@ export function initPostListControls(): void {
     items.sort((a, b) => {
       const first = a.dataset.date ?? "";
       const second = b.dataset.date ?? "";
-      return sort === "asc"
+      const dateOrder = sort === "asc"
         ? first.localeCompare(second)
         : second.localeCompare(first);
+      if (dateOrder !== 0) return dateOrder;
+
+      const firstId = a.dataset.id ?? "";
+      const secondId = b.dataset.id ?? "";
+      return sort === "asc"
+        ? firstId.localeCompare(secondId)
+        : secondId.localeCompare(firstId);
     });
     items.forEach((item) => list!.appendChild(item));
   }

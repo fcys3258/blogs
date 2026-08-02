@@ -40,7 +40,7 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 
     <section class="post-list" id="post-list">
       {posts.map((post) => (
-        <div class="post-item" data-date={post.data.date.toISOString()}>
+        <div class="post-item" data-date={post.data.date.toISOString()} data-id={post.id}>
           <ArticleCard
             title={post.data.title}
             date={post.data.date}
