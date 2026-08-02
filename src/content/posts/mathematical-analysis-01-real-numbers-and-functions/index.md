@@ -11,8 +11,14 @@ draft: false
 本文约定
 
 $$
-\mathbb N=\{1,2,3,\ldots\},\qquad
+\mathbb N=\{0,1,2,3,\ldots\},\qquad
 \mathbb Z\subset\mathbb Q\subset\mathbb R.
+$$
+
+需要限定正整数时，记
+
+$$
+\mathbb N_+=\{1,2,3,\ldots\}.
 $$
 
 ---
@@ -161,7 +167,7 @@ $$
 有理数可写成
 
 $$
-\mathbb Q=\left\{\frac pq:p\in\mathbb Z,\ q\in\mathbb N\right\}.
+\mathbb Q=\left\{\frac pq:p\in\mathbb Z,\ q\in\mathbb N_+\right\}.
 $$
 
 ### 3.2 有序域
@@ -369,7 +375,7 @@ $$
 令
 
 $$
-B=\left\{1-\frac1n:n\in\mathbb N\right\}.
+B=\left\{1-\frac1n:n\in\mathbb N_+\right\}.
 $$
 
 集合 $B$ 的前几项为 $0,\frac12,\frac23,\frac34,\ldots$，并且
@@ -411,9 +417,9 @@ $$
 ### 8.1 Archimedes 性质
 
 **定理（Archimedes 性质）**  
-对任意 $x\in\mathbb R$，存在 $n\in\mathbb N$，使得 $n>x$。
+对任意 $x\in\mathbb R$，存在 $n\in\mathbb N_+$，使得 $n>x$。
 
-它等价于：对任意 $\varepsilon>0$，存在 $n\in\mathbb N$，使得
+它等价于：对任意 $\varepsilon>0$，存在 $n\in\mathbb N_+$，使得
 
 $$
 0<\frac1n<\varepsilon.
