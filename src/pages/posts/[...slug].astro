@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import TagBadge from "../../components/TagBadge.astro";
 import { render } from "astro:content";
+import katex from "katex";
 import { formatPostDate } from "../../lib/dates";
 import { getPublishedPosts, postPath, type Post } from "../../lib/posts";
 
@@ -18,26 +19,64 @@ type Props = { post: Post };
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 
-// Keep ToC labels readable when a heading contains KaTeX markup.
-function extractRawHeadingText(rawBody: string): string[] {
+function extractRawHeadings(rawBody: string): string[] {
   const headingRegex = /^(#{2,3})\s+(.+)$/gm;
-  return Array.from(rawBody.matchAll(headingRegex), (match) =>
-    match[2]
-      .replace(/\$\$([^$]*)\$\$/g, "$1")
-      .replace(/\$([^$]*)\$/g, "$1")
-      .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-      .replace(/[`*_~]/g, "")
-      .replace(/\s+/g, " ")
-      .trim(),
-  );
+  return Array.from(rawBody.matchAll(headingRegex), (match) => match[2].trim());
+}
+
+function stripInlineMarkdown(value: string): string {
+  return value
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[*_~]/g, "")
+    .split(String.fromCharCode(96))
+    .join("")
+    .replace(/\s+/g, " ");
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Astro's heading text includes both KaTeX's MathML and visual fallback text.
+// Render math from the raw Markdown once so ToC labels match article headings.
+function renderTocHeading(rawHeading: string): string {
+  const inlineMath = /(?<!\\)(\${1,2})(.+?)(?<!\\)\1/g;
+  let html = "";
+  let cursor = 0;
+
+  for (const match of rawHeading.matchAll(inlineMath)) {
+    const index = match.index ?? cursor;
+    html += escapeHtml(stripInlineMarkdown(rawHeading.slice(cursor, index)));
+
+    try {
+      html += katex.renderToString(match[2], {
+        displayMode: false,
+        throwOnError: true,
+        strict: false,
+        trust: false,
+      });
+    } catch {
+      html += escapeHtml(match[0]);
+    }
+
+    cursor = index + match[0].length;
+  }
+
+  html += escapeHtml(stripInlineMarkdown(rawHeading.slice(cursor)));
+  return html.trim();
 }
 
 const renderedHeadings = headings.filter(({ depth }) => depth === 2 || depth === 3);
-const rawHeadingText = extractRawHeadingText(post.body ?? "");
+const rawHeadings = extractRawHeadings(post.body ?? "");
 const tocHeadings = renderedHeadings.map((heading, index) => ({
   ...heading,
-  text: rawHeadingText[index] ?? heading.text,
+  html: renderTocHeading(rawHeadings[index] ?? heading.text),
 }));
 const { title, date, tags, demo } = post.data;
 const dateTime = date.toISOString();
@@ -81,7 +120,7 @@ if (demo) {
                   class={`toc-h${heading.depth}`}
                   data-toc-link
                 >
-                  {heading.text}
+                  <span set:html={heading.html} />
                 </a>
               </li>
             ))}
