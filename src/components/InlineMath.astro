@@ -1,0 +1,11 @@
+---
+import { renderInlineMath } from "../lib/inlineMath";
+
+export interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<span set:html={renderInlineMath(text)} />

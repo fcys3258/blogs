@@ -1,9 +1,10 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import InlineMath from "../../components/InlineMath.astro";
 import TagBadge from "../../components/TagBadge.astro";
 import { render } from "astro:content";
-import katex from "katex";
 import { formatPostDate } from "../../lib/dates";
+import { renderInlineMath } from "../../lib/inlineMath";
 import { getPublishedPosts, postPath, type Post } from "../../lib/posts";
 
 export async function getStaticPaths() {
@@ -34,42 +35,10 @@ function stripInlineMarkdown(value: string): string {
     .replace(/\s+/g, " ");
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 // Astro's heading text includes both KaTeX's MathML and visual fallback text.
 // Render math from the raw Markdown once so ToC labels match article headings.
 function renderTocHeading(rawHeading: string): string {
-  const inlineMath = /(?<!\\)(\${1,2})(.+?)(?<!\\)\1/g;
-  let html = "";
-  let cursor = 0;
-
-  for (const match of rawHeading.matchAll(inlineMath)) {
-    const index = match.index ?? cursor;
-    html += escapeHtml(stripInlineMarkdown(rawHeading.slice(cursor, index)));
-
-    try {
-      html += katex.renderToString(match[2], {
-        displayMode: false,
-        throwOnError: true,
-        strict: false,
-        trust: false,
-      });
-    } catch {
-      html += escapeHtml(match[0]);
-    }
-
-    cursor = index + match[0].length;
-  }
-
-  html += escapeHtml(stripInlineMarkdown(rawHeading.slice(cursor)));
-  return html.trim();
+  return renderInlineMath(rawHeading, stripInlineMarkdown);
 }
 
 const renderedHeadings = headings.filter(({ depth }) => depth === 2 || depth === 3);
@@ -133,7 +102,7 @@ if (demo) {
     <div class="article-main">
       <article class="article">
         <header class="article-header">
-          <h1 class="article-title">{title}</h1>
+          <h1 class="article-title"><InlineMath text={title} /></h1>
           <div class="article-meta">
             <time datetime={dateTime}>{formattedDate}</time>
             {tags.length > 0 && (
@@ -164,7 +133,7 @@ if (demo) {
           {prevPost && (
             <a href={postPath(prevPost)}>
               <span class="nav-label">← 上一篇文章</span>
-              {prevPost.data.title}
+              <InlineMath text={prevPost.data.title} />
             </a>
           )}
         </div>
@@ -172,7 +141,7 @@ if (demo) {
           {nextPost && (
             <a href={postPath(nextPost)}>
               <span class="nav-label">下一篇文章 →</span>
-              {nextPost.data.title}
+              <InlineMath text={nextPost.data.title} />
             </a>
           )}
         </div>

@@ -1,6 +1,7 @@
 ---
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import { stripInlineMath } from "../lib/inlineMath";
 import { SITE_CONFIG } from "../site.config.ts";
 import "../styles/global.css";
 import "katex/dist/katex.min.css";
@@ -13,7 +14,8 @@ export interface Props {
 }
 
 const { title, description, totalPosts, type = "website" } = Astro.props;
-const pageTitle = title ? `${title} · ${SITE_CONFIG.title}` : SITE_CONFIG.title;
+const plainTitle = title ? stripInlineMath(title) : undefined;
+const pageTitle = plainTitle ? plainTitle + " · " + SITE_CONFIG.title : SITE_CONFIG.title;
 const pageDescription = description ?? SITE_CONFIG.description;
 const canonicalURL = new URL(
   Astro.url.pathname,

@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { stripInlineMath } from "../lib/inlineMath";
 import { getPublishedPosts, postPath } from "../lib/posts";
 import { SITE_CONFIG } from "../site.config";
 
@@ -19,7 +20,7 @@ export const GET: APIRoute = async ({ site }) => {
     const url = new URL(postPath(post), baseURL).href;
     return [
       "<item>",
-      `<title>${escapeXml(post.data.title)}</title>`,
+      `<title>${escapeXml(stripInlineMath(post.data.title))}</title>`,
       `<link>${escapeXml(url)}</link>`,
       `<guid isPermaLink="true">${escapeXml(url)}</guid>`,
       `<pubDate>${post.data.date.toUTCString()}</pubDate>`,

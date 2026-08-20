@@ -1,5 +1,5 @@
 ---
-title: "实变函数 07：L^p 空间"
+title: "实变函数 07：$L^p$ 空间"
 date: 2026-08-20T18:45:48+08:00
 tags: ["实变函数", "Lp空间", "Hilbert空间"]
 description: "系统整理 Lp 范数、几乎处处等价类、Hölder 与 Minkowski 不等式、完备性、稠密性、对偶性及 L2 的 Hilbert 空间结构。"

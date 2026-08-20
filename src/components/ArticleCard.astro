@@ -1,6 +1,8 @@
 ---
 import TagBadge from "./TagBadge.astro";
+import InlineMath from "./InlineMath.astro";
 import { formatPostDate } from "../lib/dates";
+import { stripInlineMath } from "../lib/inlineMath";
 
 export interface Props {
   title: string;
@@ -17,10 +19,10 @@ const formattedDate = formatPostDate(date);
 
 <article class="card">
   <!-- Invisible overlay link — covers entire card -->
-  <a href={href} class="card-overlay" aria-label={title}></a>
+  <a href={href} class="card-overlay" aria-label={stripInlineMath(title)}></a>
 
   <h2 class="card-title">
-    <a href={href} class="card-title-link">{title}</a>
+    <a href={href} class="card-title-link"><InlineMath text={title} /></a>
   </h2>
   <div class="card-meta">
     <time datetime={dateTime}>{formattedDate}</time>

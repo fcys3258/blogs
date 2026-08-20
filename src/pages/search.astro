@@ -43,6 +43,8 @@ const searchIndexPath = SITE_CONFIG.search.indexPath;
 </style>
 
 <script>
+  import { renderInlineMath, stripInlineMath } from "../lib/inlineMath";
+
   interface SearchEntry {
     title: string;
     id: string;
@@ -110,9 +112,9 @@ const searchIndexPath = SITE_CONFIG.search.indexPath;
         ).join("");
         return `
           <article class="card">
-            <a href="${href}" class="card-overlay" aria-label="${escapeHtml(post.title)}"></a>
+            <a href="${href}" class="card-overlay" aria-label="${escapeHtml(stripInlineMath(post.title))}"></a>
             <h2 class="card-title">
-              <a href="${href}" class="card-title-link">${escapeHtml(post.title)}</a>
+              <a href="${href}" class="card-title-link">${renderInlineMath(post.title)}</a>
             </h2>
             <div class="card-meta">
               <time datetime="${post.date}">${post.date}</time>
