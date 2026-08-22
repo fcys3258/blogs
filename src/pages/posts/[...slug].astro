@@ -208,8 +208,23 @@ if (demo) {
     setTocOpen(!tocSidebar?.classList.contains("open"));
   });
 
-  document.querySelectorAll("[data-toc-link]").forEach((link) => {
-    link.addEventListener("click", () => setTocOpen(false));
+  document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const hash = link.getAttribute("href");
+      if (!hash?.startsWith("#")) return;
+
+      const target = document.getElementById(hash.slice(1));
+      if (!target) return;
+
+      event.preventDefault();
+      target.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+      setTocOpen(false);
+    });
   });
 
   document.addEventListener("keydown", (event) => {
