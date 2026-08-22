@@ -535,7 +535,7 @@ $$
 |---|---|---|
 | 单调收敛定理 | $0\le f_k\uparrow f$ | $\int f_k\uparrow\int f$ |
 | Fatou 引理 | $f_k\ge0$ | $\int\liminf f_k\le\liminf\int f_k$ |
-| 控制收敛定理 | $f_k\to f$ a.e. 且 $|f_k|\le g\in L^1$ | $\int|f_k-f|\to0$，积分与极限可交换 |
+| 控制收敛定理 | $f_k\to f$ a.e. 且 $\lvert f_k\rvert\le g\in L^1$ | $\int\lvert f_k-f\rvert\to0$，积分与极限可交换 |
 
 使用时可以按以下顺序判断：
 

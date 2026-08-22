@@ -827,7 +827,7 @@ $$
 |---|---|
 | $f\in L^p,\ g\in L^q,\ 1/p+1/q=1$ | $\|fg\|_1\le\|f\|_p\|g\|_q$ |
 | $f,g\in L^p$ | $\|f+g\|_p\le\|f\|_p+\|g\|_p$ |
-| $|E|<\infty,\ p<q$ | $\|f\|_p\le|E|^{1/p-1/q}\|f\|_q$ |
+| $\lvert E\rvert<\infty,\ p<q$ | $\lVert f\rVert_p\le\lvert E\rvert^{1/p-1/q}\lVert f\rVert_q$ |
 | $f\in L^1\cap L^\infty$ | $\|f\|_p\le\|f\|_1^{1/p}\|f\|_\infty^{1-1/p}$ |
 | $f_k\to f$ 于 $L^p$ | $f_k\to f$ 依测度 |
 | $f_k\to f$ 于 $L^p$ | 存在子列几乎处处收敛于 $f$ |

@@ -784,7 +784,7 @@ $$
 | 概念 | 记号或判定要点 |
 |---|---|
 | 共轭复数 | $\overline z=x-iy$ |
-| 模 | $|z|=\sqrt{x^2+y^2}$，表示到原点的距离 |
+| 模 | $\lvert z\rvert=\sqrt{x^2+y^2}$，表示到原点的距离 |
 | 辐角 | $\arg z=\theta+2k\pi$，是多值的 |
 | 主辐角 | 本文约定 $\operatorname{Arg}z\in(-\pi,\pi]$ |
 | 三角形式 | $z=r(\cos\theta+i\sin\theta)$ |
