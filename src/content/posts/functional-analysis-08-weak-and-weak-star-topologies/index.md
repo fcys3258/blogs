@@ -633,7 +633,7 @@ $$
 这个例子明确说明：
 
 $$
-\text{弱星收敛}\centernot\Longrightarrow\text{弱收敛}.
+\text{弱星收敛}\nRightarrow\text{弱收敛}.
 $$
 
 ### 10.2 $\ell^\infty=(\ell^1)^*$ 中的坐标泛函
