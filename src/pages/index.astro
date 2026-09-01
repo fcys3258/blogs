@@ -37,6 +37,10 @@ const allTags = [...tagCounts.entries()].sort(
               </a>
             ))}
           </nav>
+        </div>
+      )}
+      <div class="controls-actions">
+        {allTags.length > 0 && (
           <button
             type="button"
             class="tag-toggle"
@@ -48,18 +52,18 @@ const allTags = [...tagCounts.entries()].sort(
             <span id="tag-toggle-label">展开更多</span>
             <span class="tag-toggle-icon" aria-hidden="true">⌄</span>
           </button>
-        </div>
-      )}
-      <button
-        type="button"
-        class="sort-btn"
-        id="sort-btn"
-        title="切换排序"
-        aria-label="切换为最早文章在前"
-      >
-        <span id="sort-icon">🕐</span>
-        <span id="sort-label">最新在前</span>
-      </button>
+        )}
+        <button
+          type="button"
+          class="sort-btn"
+          id="sort-btn"
+          title="切换排序"
+          aria-label="切换为最早文章在前"
+        >
+          <span id="sort-icon">🕐</span>
+          <span id="sort-label">最新在前</span>
+        </button>
+      </div>
     </div>
 
     <section class="post-list" id="post-list">
@@ -86,14 +90,9 @@ const allTags = [...tagCounts.entries()].sort(
 
 <style>
   .controls-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border-light);
     margin-bottom: 0.5rem;
-    flex-wrap: wrap;
   }
   .tag-filter {
     display: flex;
@@ -103,8 +102,14 @@ const allTags = [...tagCounts.entries()].sort(
     overflow: hidden;
   }
   .tag-filter-section {
-    flex: 1;
-    min-width: 0;
+    width: 100%;
+  }
+  .controls-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.35rem;
   }
   .tag-filter.is-collapsed {
     max-height: var(--tag-filter-collapsed-height, 3.6rem);
@@ -132,7 +137,6 @@ const allTags = [...tagCounts.entries()].sort(
     display: inline-flex;
     align-items: center;
     gap: 0.2rem;
-    margin-top: 0.35rem;
     border: 0;
     background: transparent;
     color: var(--text-muted);
@@ -166,6 +170,7 @@ const allTags = [...tagCounts.entries()].sort(
     cursor: pointer;
     white-space: nowrap;
     font-family: inherit;
+    margin-left: auto;
   }
   .sort-btn:hover {
     background: var(--bg-hover);
