@@ -7,7 +7,16 @@ import { SITE_CONFIG } from "../site.config.ts";
 const PAGE_SIZE = SITE_CONFIG.pagination.pageSize;
 const posts = await getPublishedPosts();
 
-const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
+const tagCounts = new Map<string, number>();
+posts.forEach((post) => {
+  post.data.tags.forEach((tag) => {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  });
+});
+const allTags = [...tagCounts.entries()].sort(
+  ([firstTag, firstCount], [secondTag, secondCount]) =>
+    secondCount - firstCount || firstTag.localeCompare(secondTag, "zh-CN"),
+);
 ---
 
 <BaseLayout description={SITE_CONFIG.description} totalPosts={posts.length}>
@@ -19,12 +28,27 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 
     <div class="controls-bar">
       {allTags.length > 0 && (
-        <nav class="tag-filter">
-          <a href="/" class="tag-filter-item active">全部</a>
-          {allTags.map((tag) => (
-            <a href={tagPath(tag)} class="tag-filter-item">{tag}</a>
-          ))}
-        </nav>
+        <div class="tag-filter-section">
+          <nav class="tag-filter is-collapsed" id="tag-filter" aria-label="文章标签">
+            <a href="/" class="tag-filter-item active">全部</a>
+            {allTags.map(([tag, count]) => (
+              <a href={tagPath(tag)} class="tag-filter-item" title={`${count} 篇文章`}>
+                {tag}
+              </a>
+            ))}
+          </nav>
+          <button
+            type="button"
+            class="tag-toggle"
+            id="tag-toggle"
+            aria-controls="tag-filter"
+            aria-expanded="false"
+            hidden
+          >
+            <span id="tag-toggle-label">展开更多</span>
+            <span class="tag-toggle-icon" aria-hidden="true">⌄</span>
+          </button>
+        </div>
       )}
       <button
         type="button"
@@ -75,7 +99,18 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
     display: flex;
     gap: 0.4rem;
     flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+  }
+  .tag-filter-section {
     flex: 1;
+    min-width: 0;
+  }
+  .tag-filter.is-collapsed {
+    max-height: var(--tag-filter-collapsed-height, 3.6rem);
+  }
+  .tag-filter.is-expanded {
+    max-height: none;
   }
   .tag-filter-item {
     font-size: 0.8rem;
@@ -84,12 +119,39 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
     padding: 0.2rem 0.65rem;
     border-radius: 4px;
     background: var(--accent-bg);
+    line-height: 1.5;
+    white-space: nowrap;
   }
   .tag-filter-item:hover,
   .tag-filter-item.active {
     background: var(--accent);
     color: white;
     text-decoration: none;
+  }
+  .tag-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-top: 0.35rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  .tag-toggle:hover {
+    color: var(--accent);
+  }
+  .tag-toggle[hidden] {
+    display: none;
+  }
+  .tag-toggle-icon {
+    display: inline-block;
+    transition: transform 0.15s ease;
+  }
+  .tag-toggle[aria-expanded="true"] .tag-toggle-icon {
+    transform: rotate(180deg);
   }
   .sort-btn {
     display: flex;

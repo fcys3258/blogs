@@ -10,6 +10,8 @@ export function initPostListControls(): void {
   const list = document.getElementById("post-list");
   const pagination = document.getElementById("pagination");
   const sortButton = document.getElementById("sort-btn") as HTMLButtonElement | null;
+  const tagFilter = document.getElementById("tag-filter");
+  const tagToggle = document.getElementById("tag-toggle") as HTMLButtonElement | null;
 
   if (!pageData || !list || !pagination) return;
 
@@ -21,6 +23,43 @@ export function initPostListControls(): void {
     1,
     Math.ceil(list.querySelectorAll(".post-item").length / pageSize),
   );
+
+  let tagsExpanded = false;
+  let tagResizeFrame = 0;
+
+  function renderTagFilter(): void {
+    if (!tagFilter || !tagToggle) return;
+
+    const items = Array.from(
+      tagFilter.querySelectorAll<HTMLElement>(".tag-filter-item"),
+    );
+    const rowTops = [...new Set(items.map((item) => item.offsetTop))]
+      .sort((first, second) => first - second);
+    const canCollapse = rowTops.length > 2;
+
+    tagToggle.hidden = !canCollapse;
+    tagFilter.classList.toggle("is-collapsed", canCollapse);
+    tagFilter.classList.toggle("is-expanded", canCollapse && tagsExpanded);
+
+    if (!canCollapse) {
+      tagFilter.style.removeProperty("--tag-filter-collapsed-height");
+      return;
+    }
+
+    const secondRowTop = rowTops[1];
+    const collapsedHeight = Math.max(
+      ...items
+        .filter((item) => item.offsetTop === secondRowTop)
+        .map((item) => item.offsetTop + item.offsetHeight),
+    );
+    tagFilter.style.setProperty(
+      "--tag-filter-collapsed-height",
+      `${collapsedHeight}px`,
+    );
+    tagToggle.setAttribute("aria-expanded", String(tagsExpanded));
+    const label = document.getElementById("tag-toggle-label");
+    if (label) label.textContent = tagsExpanded ? "收起标签" : "展开更多";
+  }
 
   function readState(): ListState {
     const params = new URLSearchParams(window.location.search);
@@ -183,6 +222,17 @@ export function initPostListControls(): void {
     });
   });
 
+  tagToggle?.addEventListener("click", () => {
+    tagsExpanded = !tagsExpanded;
+    renderTagFilter();
+  });
+
+  window.addEventListener("resize", () => {
+    window.cancelAnimationFrame(tagResizeFrame);
+    tagResizeFrame = window.requestAnimationFrame(renderTagFilter);
+  });
+
   window.addEventListener("popstate", () => render(readState()));
+  renderTagFilter();
   render(readState());
 }
